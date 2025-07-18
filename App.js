@@ -1,37 +1,13 @@
-// 子アイテムを指定位置に移動
-const moveChildToPosition = (childId, oldParentId, targetIndex) => {
-  let childToMove = null;
-
-  // 子アイテムを見つけて取得
-  const updatedTasks = tasks.map(task => {
-    if (task.id === oldParentId) {
-      const child = task.children.find(c => c.id === childId);
-      if (child) {
-        childToMove = { ...child, children: [] };
-        return {
-          ...task,
-          children: task.children.filter(c => c.id !== childId)
-        };
-      }
-    }
-    return task;
-  });
-
-  // 子アイテムを指定位置に親アイテムとして挿入
-  if (childToMove) {
-    const newTasks = [...updatedTasks];
-    newTasks.splice(targetIndex, 0, childToMove);
-    setTasks(newTasks);
-  }
-}; import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 
 export default function App() {
+  // 基本状態
   const [tasks, setTasks] = useState([]);
   const [inputText, setInputText] = useState('');
   const [selectedParentId, setSelectedParentId] = useState(null);
 
-  // ドラッグ状態の管理
+  // ドラッグ状態
   const [isDragging, setIsDragging] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
   const [isChildDrag, setIsChildDrag] = useState(false);
@@ -50,14 +26,14 @@ export default function App() {
 
       if (selectedParentId) {
         // 子タスクとして追加
-        setTasks(tasks.map(task =>
+        setTasks(currentTasks => currentTasks.map(task =>
           task.id === selectedParentId
             ? { ...task, children: [...task.children, newTask] }
             : task
         ));
       } else {
         // 親タスクとして追加
-        setTasks([...tasks, newTask]);
+        setTasks(currentTasks => [...currentTasks, newTask]);
       }
 
       setInputText('');
@@ -85,51 +61,86 @@ export default function App() {
     setDragParentId(null);
   };
 
+  // 子アイテムを指定位置に移動
+  const moveChildToPosition = (childId, oldParentId, targetIndex) => {
+    setTasks(currentTasks => {
+      let childToMove = null;
+
+      // 子アイテムを見つけて取得
+      const updatedTasks = currentTasks.map(task => {
+        if (task.id === oldParentId) {
+          const child = task.children.find(c => c.id === childId);
+          if (child) {
+            childToMove = { ...child, children: [] };
+            return {
+              ...task,
+              children: task.children.filter(c => c.id !== childId)
+            };
+          }
+        }
+        return task;
+      });
+
+      // 子アイテムを指定位置に親アイテムとして挿入
+      if (childToMove) {
+        const newTasks = [...updatedTasks];
+        newTasks.splice(targetIndex, 0, childToMove);
+        return newTasks;
+      }
+
+      return currentTasks;
+    });
+  };
+
   // 親アイテムを別の親の子アイテムとして移動
   const moveParentToChild = (parentId, targetParentId) => {
-    let parentToMove = null;
+    setTasks(currentTasks => {
+      let parentToMove = null;
 
-    // 移動する親アイテムを見つけて取得
-    const parentItem = tasks.find(task => task.id === parentId);
-    if (parentItem) {
-      parentToMove = {
-        ...parentItem,
-        children: [] // 子アイテムは移動時に独立させる
-      };
-    }
+      // 移動する親アイテムを見つけて取得
+      const parentItem = currentTasks.find(task => task.id === parentId);
+      if (parentItem) {
+        parentToMove = {
+          ...parentItem,
+          children: [] // 子アイテムは移動時に独立させる
+        };
+      }
 
-    // 元の親アイテムを削除し、その子アイテムを親レベルに昇格
-    let newTasks = tasks.filter(task => task.id !== parentId);
-    if (parentItem && parentItem.children.length > 0) {
-      // 元の子アイテムを親レベルに追加
-      newTasks = [...newTasks, ...parentItem.children.map(child => ({ ...child, children: [] }))];
-    }
+      // 元の親アイテムを削除し、その子アイテムを親レベルに昇格
+      let newTasks = currentTasks.filter(task => task.id !== parentId);
+      if (parentItem && parentItem.children.length > 0) {
+        // 元の子アイテムを親レベルに追加
+        newTasks = [...newTasks, ...parentItem.children.map(child => ({ ...child, children: [] }))];
+      }
 
-    // 移動先の親アイテムに子として追加
-    if (parentToMove) {
-      newTasks = newTasks.map(task =>
-        task.id === targetParentId
-          ? { ...task, children: [...task.children, parentToMove] }
-          : task
-      );
-    }
+      // 移動先の親アイテムに子として追加
+      if (parentToMove) {
+        newTasks = newTasks.map(task =>
+          task.id === targetParentId
+            ? { ...task, children: [...task.children, parentToMove] }
+            : task
+        );
+      }
 
-    setTasks(newTasks);
+      return newTasks;
+    });
   };
 
   // アイテムの順序を変更
   const reorderTasks = (fromIndex, toIndex) => {
-    const newTasks = [...tasks];
-    const [movedItem] = newTasks.splice(fromIndex, 1);
-    newTasks.splice(toIndex, 0, movedItem);
-    setTasks(newTasks);
+    setTasks(currentTasks => {
+      const newTasks = [...currentTasks];
+      const [movedItem] = newTasks.splice(fromIndex, 1);
+      newTasks.splice(toIndex, 0, movedItem);
+      return newTasks;
+    });
   };
 
   // タスクの完了状態を切り替え
   const toggleTask = (taskId, isChild = false, parentId = null) => {
     if (isChild) {
       // 子タスクの状態変更
-      setTasks(tasks.map(task =>
+      setTasks(currentTasks => currentTasks.map(task =>
         task.id === parentId
           ? {
             ...task,
@@ -143,7 +154,7 @@ export default function App() {
       ));
     } else {
       // 親タスクの状態変更
-      setTasks(tasks.map(task =>
+      setTasks(currentTasks => currentTasks.map(task =>
         task.id === taskId
           ? { ...task, completed: !task.completed }
           : task
@@ -164,7 +175,7 @@ export default function App() {
           onPress: () => {
             if (isChild) {
               // 子タスクの削除
-              setTasks(tasks.map(task =>
+              setTasks(currentTasks => currentTasks.map(task =>
                 task.id === parentId
                   ? {
                     ...task,
@@ -174,7 +185,7 @@ export default function App() {
               ));
             } else {
               // 親タスクの削除（子タスクも一緒に削除）
-              setTasks(tasks.filter(task => task.id !== taskId));
+              setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
               // 削除された親が選択されていた場合、選択を解除
               if (selectedParentId === taskId) {
                 setSelectedParentId(null);
@@ -200,8 +211,13 @@ export default function App() {
             moveChildToPosition(draggedItem.id, dragParentId, index);
           } else {
             // 親アイテムの順序変更
-            const fromIndex = tasks.findIndex(t => t.id === draggedItem.id);
-            reorderTasks(fromIndex, index);
+            setTasks(currentTasks => {
+              const fromIndex = currentTasks.findIndex(t => t.id === draggedItem.id);
+              const newTasks = [...currentTasks];
+              const [movedItem] = newTasks.splice(fromIndex, 1);
+              newTasks.splice(index, 0, movedItem);
+              return newTasks;
+            });
           }
           endDrag();
         }}
@@ -331,6 +347,20 @@ export default function App() {
             </Text>
           </TouchableOpacity>
 
+          {/* 子に移動ドロップゾーン */}
+          {isDragging && !isChildDrag && draggedItem?.id !== item.id && (
+            <TouchableOpacity
+              style={styles.childDropZone}
+              onPress={() => {
+                moveParentToChild(draggedItem.id, item.id);
+                endDrag();
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.childDropZoneText}>子に移動</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={[
               styles.childAddButtonInline,
@@ -427,7 +457,7 @@ export default function App() {
           <Text style={styles.dragModeText}>
             {isChildDrag
               ? '子アイテムを移動中 - 点線エリアをタップして移動'
-              : '親アイテムを移動中 - 点線エリア:順序変更 / 親アイテム:子に変更'
+              : '親アイテムを移動中 - 点線エリア:順序変更 / 子に移動ボタン:子に変更'
             }
           </Text>
           <TouchableOpacity
@@ -455,8 +485,13 @@ export default function App() {
                   moveChildToPosition(draggedItem.id, dragParentId, tasks.length);
                 } else {
                   // 親アイテムを最後に移動
-                  const fromIndex = tasks.findIndex(t => t.id === draggedItem.id);
-                  reorderTasks(fromIndex, tasks.length - 1);
+                  setTasks(currentTasks => {
+                    const fromIndex = currentTasks.findIndex(t => t.id === draggedItem.id);
+                    const newTasks = [...currentTasks];
+                    const [movedItem] = newTasks.splice(fromIndex, 1);
+                    newTasks.push(movedItem);
+                    return newTasks;
+                  });
                 }
                 endDrag();
               }}
@@ -727,16 +762,26 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     alignItems: 'center',
   },
-  dropLine: {
-    width: '100%',
-    height: 2,
-    backgroundColor: '#2196F3',
-    borderRadius: 1,
-    marginBottom: 4,
-  },
   dropZoneLabel: {
     color: '#2196F3',
     fontSize: 12,
+    fontWeight: 'bold',
+  },
+  childDropZone: {
+    backgroundColor: '#F0F8FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginHorizontal: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#2196F3',
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  childDropZoneText: {
+    color: '#2196F3',
+    fontSize: 10,
     fontWeight: 'bold',
   },
   counter: {
