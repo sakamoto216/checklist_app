@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Text, View, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { styles } from './src/styles/styles';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 
 export default function App() {
   // 基本状態
@@ -346,13 +345,17 @@ export default function App() {
                   moveParentToChild(draggedItem.id, parentId);
                   endDrag();
                 } else if (!isDragging && !editingId) {
-                  // 編集モードを開始（一旦シングルタップで編集開始）
-                  startEditing(child.id, child.text, true, parentId);
+                  toggleTask(child.id, true, parentId);
                 }
               }}
               onLongPress={() => {
                 if (!isDragging && !editingId) {
                   startDrag(child, true, parentId);
+                }
+              }}
+              onDoublePress={() => {
+                if (!isDragging && !editingId) {
+                  startEditing(child.id, child.text, true, parentId);
                 }
               }}
               delayLongPress={500}
@@ -453,13 +456,17 @@ export default function App() {
                     moveParentToChild(draggedItem.id, item.id);
                     endDrag();
                   } else if (!isDragging && !editingId) {
-                    // 編集モードを開始（一旦シングルタップで編集開始）
-                    startEditing(item.id, item.text);
+                    toggleTask(item.id);
                   }
                 }}
                 onLongPress={() => {
                   if (!isDragging && !editingId) {
                     startDrag(item, false);
+                  }
+                }}
+                onDoublePress={() => {
+                  if (!isDragging && !editingId) {
+                    startEditing(item.id, item.text);
                   }
                 }}
                 delayLongPress={500}
@@ -665,3 +672,332 @@ export default function App() {
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    paddingTop: 50,
+    paddingHorizontal: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 15,
+    marginTop: 15,
+    color: '#333',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#fff',
+    marginRight: 10,
+    fontSize: 16,
+  },
+  addButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  addButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  modeIndicator: {
+    backgroundColor: '#E8F5E8',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  modeText: {
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  editModeIndicator: {
+    backgroundColor: '#E3F2FD',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+  },
+  editModeText: {
+    color: '#1976D2',
+    fontWeight: 'bold',
+  },
+  cancelButton: {
+    backgroundColor: '#FF5722',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelModeText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  dragModeIndicator: {
+    backgroundColor: '#FFF3CD',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFC107',
+  },
+  dragModeText: {
+    color: '#856404',
+    fontWeight: 'bold',
+    flex: 1,
+    fontSize: 12,
+  },
+  cancelDragButton: {
+    backgroundColor: '#DC3545',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  cancelDragText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  taskList: {
+    flex: 1,
+  },
+  taskListContent: {
+    paddingBottom: 20,
+  },
+  taskContainer: {
+    marginBottom: 15,
+  },
+  parentTaskItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    borderLeftWidth: 3,
+    borderLeftColor: '#007AFF',
+  },
+  parentTaskItemSelected: {
+    backgroundColor: '#E8F5E8',
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+  },
+  childTaskContainer: {
+    marginLeft: 20,
+    marginTop: 5,
+  },
+  childTaskItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4CAF50',
+  },
+  checkboxContainer: {
+    padding: 8,
+  },
+  checkbox: {
+    width: 28,
+    height: 28,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxCompleted: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  checkboxText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  taskTextContainer: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  taskTextTouchable: {
+    flex: 1,
+    paddingVertical: 4,
+  },
+  taskText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  taskTextCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#999',
+  },
+  editContainer: {
+    flex: 1,
+  },
+  editInput: {
+    borderWidth: 1,
+    borderColor: '#2196F3',
+    borderRadius: 4,
+    padding: 8,
+    backgroundColor: '#fff',
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  editButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  saveButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  cancelEditButton: {
+    backgroundColor: '#FF5722',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  cancelEditButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 4,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  childAddButtonInline: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+    marginRight: 8,
+    minWidth: 32,
+    height: 32,
+  },
+  childAddButtonInlineSelected: {
+    backgroundColor: '#2196F3',
+  },
+  childAddButtonInlineText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  draggedItem: {
+    opacity: 0.5,
+    backgroundColor: '#e0e0e0',
+  },
+  dragIndicator: {
+    position: 'absolute',
+    right: 5,
+    top: 5,
+  },
+  dragIndicatorText: {
+    fontSize: 16,
+  },
+  dropZoneBetween: {
+    backgroundColor: '#F0F8FF',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#2196F3',
+    borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+  dropZoneFinal: {
+    backgroundColor: '#F0F8FF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#2196F3',
+    borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+  dropZoneLabel: {
+    color: '#2196F3',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  childDropZone: {
+    backgroundColor: '#F0F8FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginHorizontal: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#2196F3',
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  childDropZoneText: {
+    color: '#2196F3',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  counter: {
+    textAlign: 'center',
+    marginBottom: 20,
+    fontSize: 16,
+    color: '#666',
+  },
+});
