@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Text, View, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { styles } from './src/styles/styles';
+import ModeIndicators from './src/components/ModeIndicators';
+import TaskInput from './src/components/TaskInput';
 
 export default function App() {
   // 基本状態
@@ -570,44 +572,15 @@ export default function App() {
         ✅: {stats.completed} / {stats.total}
       </Text>
 
-      {selectedParentId && (
-        <View style={styles.modeIndicator}>
-          <Text style={styles.modeText}>
-            アイテム追加モード: {getSelectedParentName()}
-          </Text>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => setSelectedParentId(null)}
-          >
-            <Text style={styles.cancelModeText}>×</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {editingId && (
-        <View style={styles.editModeIndicator}>
-          <Text style={styles.editModeText}>
-            編集モード: アイテム名を変更しています
-          </Text>
-        </View>
-      )}
-
-      {isDragging && (
-        <View style={styles.dragModeIndicator}>
-          <Text style={styles.dragModeText}>
-            {isChildDrag
-              ? '子アイテムを移動中 - 点線エリアをタップして移動'
-              : '親アイテムを移動中 - 点線エリア:順序変更 / 子に移動ボタン:子に変更'
-            }
-          </Text>
-          <TouchableOpacity
-            style={styles.cancelDragButton}
-            onPress={endDrag}
-          >
-            <Text style={styles.cancelDragText}>キャンセル</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <ModeIndicators
+        selectedParentId={selectedParentId}
+        selectedParentName={getSelectedParentName()}
+        onCancelParentSelection={() => setSelectedParentId(null)}
+        editingId={editingId}
+        isDragging={isDragging}
+        isChildDrag={isChildDrag}
+        onCancelDrag={endDrag}
+      />
 
       <FlatList
         data={tasks}
@@ -643,25 +616,13 @@ export default function App() {
         )}
       />
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder={selectedParentId ? `「${getSelectedParentName()}」に新しいアイテムを入力...` : "新しいアイテムを入力..."}
-          value={inputText}
-          onChangeText={setInputText}
-          onSubmitEditing={addTask}
-          editable={!editingId} // 編集中は新規追加を無効化
-        />
-        <TouchableOpacity
-          style={[styles.addButton, editingId && styles.addButtonDisabled]}
-          onPress={addTask}
-          disabled={!!editingId}
-        >
-          <Text style={styles.addButtonText}>
-            追加
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TaskInput
+        inputText={inputText}
+        onChangeText={setInputText}
+        onSubmit={addTask}
+        placeholder={selectedParentId ? `「${getSelectedParentName()}」に新しいアイテムを入力...` : "新しいアイテムを入力..."}
+        disabled={!!editingId}
+      />
     </KeyboardAvoidingView>
   );
 }
