@@ -3,17 +3,17 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#aaaaaa',
         paddingTop: 50,
         paddingHorizontal: 20,
     },
     title: {
-        fontSize: 24,
+        fontSize: 30,
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: 15,
         marginTop: 15,
-        color: '#333',
+        color: '#fff',
     },
     inputContainer: {
         flexDirection: 'row',
@@ -25,14 +25,14 @@ export const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ddd',
         borderRadius: 8,
-        padding: 12,
+        padding: 14,
         backgroundColor: '#fff',
         marginRight: 10,
-        fontSize: 16,
+        fontSize: 18,
     },
     addButton: {
         backgroundColor: '#007AFF',
-        paddingHorizontal: 16,
+        paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 8,
         justifyContent: 'center',
@@ -43,7 +43,7 @@ export const styles = StyleSheet.create({
     addButtonText: {
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: 12,
+        fontSize: 16,
     },
     modeIndicator: {
         backgroundColor: '#E8F5E8',
@@ -121,7 +121,7 @@ export const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     taskContainer: {
-        marginBottom: 15,
+        marginBottom: 5,
     },
     parentTaskItem: {
         flexDirection: 'row',
@@ -135,7 +135,7 @@ export const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 2,
         elevation: 2,
-        borderLeftWidth: 3,
+        borderLeftWidth: 6,
         borderLeftColor: '#007AFF',
     },
     parentTaskItemSelected: {
@@ -144,7 +144,7 @@ export const styles = StyleSheet.create({
         borderColor: '#4CAF50',
     },
     childTaskContainer: {
-        marginLeft: 20,
+        marginLeft: 25,
         marginTop: 5,
     },
     childTaskItem: {
@@ -154,7 +154,7 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingVertical: 8,
         borderRadius: 6,
-        borderLeftWidth: 3,
+        borderLeftWidth: 6,
         borderLeftColor: '#4CAF50',
     },
     checkboxContainer: {
@@ -214,24 +214,25 @@ export const styles = StyleSheet.create({
     saveButton: {
         backgroundColor: '#4CAF50',
         paddingHorizontal: 12,
-        paddingVertical: 6,
+        paddingVertical: 9,
         borderRadius: 4,
         marginRight: 8,
     },
     saveButtonText: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: 'bold',
     },
     cancelEditButton: {
         backgroundColor: '#FF5722',
         paddingHorizontal: 12,
-        paddingVertical: 6,
+        paddingVertical: 9,
         borderRadius: 4,
+        marginRight: 8,
     },
     cancelEditButtonText: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: 'bold',
     },
     deleteButton: {
@@ -242,7 +243,7 @@ export const styles = StyleSheet.create({
     },
     deleteButtonText: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: 'bold',
     },
     childAddButtonInline: {
@@ -262,7 +263,19 @@ export const styles = StyleSheet.create({
     },
     childAddButtonInlineText: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    editButton: {
+        backgroundColor: '#FF9800',
+        paddingHorizontal: 12,
+        paddingVertical: 9,
+        borderRadius: 4,
+        marginLeft: 4,
+    },
+    editButtonText: {
+        color: '#fff',
+        fontSize: 14,
         fontWeight: 'bold',
     },
     draggedItem: {
