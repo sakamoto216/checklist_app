@@ -22,6 +22,7 @@ const ParentTaskItem = ({
     onMoveParentToChild,
     onEndDrag,
     onToggleParentSelection,
+    onMoveChildToAnotherParent,
     renderDropZone,
     renderChildTask
 }) => {
@@ -96,6 +97,10 @@ const ParentTaskItem = ({
                                         // 親アイテムを子アイテムとして移動
                                         onMoveParentToChild(draggedItem.id, item.id);
                                         onEndDrag();
+                                    } else if (isDragging && isChildDrag && draggedItem?.parentId !== item.id) {
+                                        // 子アイテムを別の親の子として移動
+                                        onMoveChildToAnotherParent && onMoveChildToAnotherParent(draggedItem.id, draggedItem.parentId, item.id);
+                                        onEndDrag();
                                     } else if (!isDragging && !editingId) {
                                         // チェックボックスの切り替え（従来の動作）
                                         onToggleTask(item.id);
@@ -120,16 +125,24 @@ const ParentTaskItem = ({
                     </View>
 
                     {/* 子に移動ドロップゾーン */}
-                    {isDragging && !isChildDrag && draggedItem?.id !== item.id && (
+                    {isDragging && ((isChildDrag && draggedItem?.parentId !== item.id) || (!isChildDrag && draggedItem?.id !== item.id)) && (
                         <TouchableOpacity
                             style={styles.childDropZone}
                             onPress={() => {
-                                onMoveParentToChild(draggedItem.id, item.id);
+                                if (isChildDrag) {
+                                    // 子アイテムを別の親の子として移動
+                                    onMoveChildToAnotherParent && onMoveChildToAnotherParent(draggedItem.id, draggedItem.parentId, item.id);
+                                } else {
+                                    // 親アイテムを子として移動
+                                    onMoveParentToChild(draggedItem.id, item.id);
+                                }
                                 onEndDrag();
                             }}
                             activeOpacity={0.7}
                         >
-                            <Text style={styles.childDropZoneText}>子に移動</Text>
+                            <Text style={styles.childDropZoneText}>
+                                {isChildDrag ? '子移動' : '子に移動'}
+                            </Text>
                         </TouchableOpacity>
                     )}
 

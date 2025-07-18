@@ -171,6 +171,39 @@ export default function App() {
     }));
   };
 
+  // 子アイテムを別の親の子として移動
+  const moveChildToAnotherParent = (childId, oldParentId, newParentId) => {
+    setTasks(currentTasks => {
+      let childToMove = null;
+
+      // 子アイテムを元の親から取得・削除
+      const updatedTasks = currentTasks.map(task => {
+        if (task.id === oldParentId) {
+          const child = task.children.find(c => c.id === childId);
+          if (child) {
+            childToMove = { ...child };
+            return {
+              ...task,
+              children: task.children.filter(c => c.id !== childId)
+            };
+          }
+        }
+        return task;
+      });
+
+      // 新しい親に子アイテムを追加
+      if (childToMove) {
+        return updatedTasks.map(task =>
+          task.id === newParentId
+            ? { ...task, children: [...task.children, childToMove] }
+            : task
+        );
+      }
+
+      return currentTasks;
+    });
+  };
+
   // 親アイテムを別の親の子アイテムとして移動
   const moveParentToChild = (parentId, targetParentId) => {
     setTasks(currentTasks => {
@@ -319,6 +352,7 @@ export default function App() {
       onMoveParentToChild={moveParentToChild}
       onEndDrag={endDrag}
       onReorderChildren={reorderChildrenInParent}
+      onMoveChildToAnotherParent={moveChildToAnotherParent}
     />
   );
 
@@ -343,6 +377,7 @@ export default function App() {
       onMoveParentToChild={moveParentToChild}
       onEndDrag={endDrag}
       onToggleParentSelection={toggleParentSelection}
+      onMoveChildToAnotherParent={moveChildToAnotherParent}
       renderDropZone={renderDropZone}
       renderChildTask={renderChildTask}
     />
@@ -379,6 +414,25 @@ export default function App() {
     return selectedParent ? selectedParent.text : '';
   };
 
+  // 編集中のアイテム名を取得
+  const getEditingItemName = () => {
+    if (!editingId) return '';
+
+    // 親アイテムから検索
+    for (const task of tasks) {
+      if (task.id === editingId) {
+        return task.text;
+      }
+      // 子アイテムから検索
+      for (const child of task.children) {
+        if (child.id === editingId) {
+          return child.text;
+        }
+      }
+    }
+    return '';
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -396,6 +450,9 @@ export default function App() {
         selectedParentName={getSelectedParentName()}
         onCancelParentSelection={() => setSelectedParentId(null)}
         editingId={editingId}
+        editingText={editingText}
+        tasks={tasks}
+        onCancelEditing={cancelEditing}
         isDragging={isDragging}
         isChildDrag={isChildDrag}
         onCancelDrag={endDrag}

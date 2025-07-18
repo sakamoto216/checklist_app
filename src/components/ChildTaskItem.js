@@ -20,7 +20,8 @@ const ChildTaskItem = ({
     onDeleteTask,
     onMoveParentToChild,
     onEndDrag,
-    onReorderChildren
+    onReorderChildren,
+    onMoveChildToAnotherParent
 }) => {
     return (
         <View style={styles.childTaskContainer}>

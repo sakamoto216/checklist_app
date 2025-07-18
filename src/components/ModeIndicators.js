@@ -7,17 +7,40 @@ const ModeIndicators = ({
     selectedParentName,
     onCancelParentSelection,
     editingId,
+    editingText,
+    tasks,
+    onCancelEditing,
     isDragging,
     isChildDrag,
     onCancelDrag
 }) => {
+
+    // 編集中のアイテムの元の名前を取得
+    const getEditingItemName = () => {
+        if (!editingId || !tasks) return '';
+
+        // 親アイテムから検索
+        for (const task of tasks) {
+            if (task.id === editingId) {
+                return task.text;
+            }
+            // 子アイテムから検索
+            for (const child of task.children) {
+                if (child.id === editingId) {
+                    return child.text;
+                }
+            }
+        }
+        return '';
+    };
+
     return (
         <>
             {/* 親選択モード表示 */}
             {selectedParentId && (
                 <View style={styles.modeIndicator}>
-                    <Text style={styles.modeText}>
-                        アイテム追加モード: {selectedParentName}
+                    <Text style={[styles.modeText, { flex: 1, flexWrap: 'wrap' }]} numberOfLines={2}>
+                        {selectedParentName}へ子を追加
                     </Text>
                     <TouchableOpacity
                         style={styles.cancelButton}
@@ -31,26 +54,29 @@ const ModeIndicators = ({
             {/* 編集モード表示 */}
             {editingId && (
                 <View style={styles.editModeIndicator}>
-                    <Text style={styles.editModeText}>
-                        編集モード: アイテム名を変更しています
+                    <Text style={[styles.editModeText, { flex: 1, flexWrap: 'wrap' }]} numberOfLines={2}>
+                        {getEditingItemName()}の編集
                     </Text>
+                    <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={onCancelEditing}
+                    >
+                        <Text style={styles.cancelModeText}>×</Text>
+                    </TouchableOpacity>
                 </View>
             )}
 
             {/* ドラッグモード表示 */}
             {isDragging && (
                 <View style={styles.dragModeIndicator}>
-                    <Text style={styles.dragModeText}>
-                        {isChildDrag
-                            ? '子アイテムを移動中 - 点線エリアをタップして移動'
-                            : '親アイテムを移動中 - 点線エリア:順序変更 / 子に移動ボタン:子に変更'
-                        }
+                    <Text style={[styles.dragModeText, { flex: 1, flexWrap: 'wrap' }]}>
+                        タップで点線で囲われた箇所に移動
                     </Text>
                     <TouchableOpacity
-                        style={styles.cancelDragButton}
+                        style={styles.cancelButton}
                         onPress={onCancelDrag}
                     >
-                        <Text style={styles.cancelDragText}>キャンセル</Text>
+                        <Text style={styles.cancelModeText}>×</Text>
                     </TouchableOpacity>
                 </View>
             )}
