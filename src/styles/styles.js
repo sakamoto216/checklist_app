@@ -164,7 +164,7 @@ export const styles = StyleSheet.create({
         padding: 4,
     },
     checkboxContainerChild: {
-        padding: 3,
+        padding: 4,
     },
     checkboxContainerDisabled: {
         opacity: 0.5,
@@ -204,7 +204,8 @@ export const styles = StyleSheet.create({
         paddingVertical: 4,
     },
     taskTextContainerChild: {
-        paddingHorizontal: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
     },
     taskTextTouchable: {
         flex: 1,
@@ -357,19 +358,98 @@ export const styles = StyleSheet.create({
     childTaskContainer: {
         marginTop: 3,
     },
+    childTaskContainerActive: {
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: '#4CAF50',
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
+    },
     childTaskItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-        paddingVertical: 4,
-        paddingHorizontal: 8,
+        backgroundColor: '#f8f8f8',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        paddingRight: 36, // ドラッグハンドル用の余白
         borderRadius: 6,
-        borderLeftWidth: 6,
+        borderLeftWidth: 4,
         borderLeftColor: '#4CAF50',
+        minHeight: 42,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 1,
+        elevation: 1,
     },
     childTaskItemDeleteMode: {
         backgroundColor: '#FFF8E1',
         borderLeftColor: '#FF9800',
+    },
+    childTaskItemActive: {
+        backgroundColor: '#E8F5E8',
+        borderLeftColor: '#4CAF50',
+    },
+    // 子タスクのドラッグハンドル
+    childDragHandle: {
+        position: 'absolute',
+        right: 0,
+        top: 0,
+        bottom: 0,
+        width: 28,
+        backgroundColor: '#E8F5E8',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderTopRightRadius: 6,
+        borderBottomRightRadius: 6,
+    },
+    childDragHandleText: {
+        color: '#4CAF50',
+        fontSize: 12,
+    },
+    // 右スワイプアクション（親タスク化）
+    promoteAction: {
+        backgroundColor: '#FF9800',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        marginTop: 3,
+        borderTopRightRadius: 6,
+        borderBottomRightRadius: 6,
+        paddingHorizontal: 10,
+    },
+    promoteActionText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    promoteActionIcon: {
+        fontSize: 16,
+        marginTop: 2,
+    },
+    // 左スワイプアクション（子タスク化）
+    demoteAction: {
+        backgroundColor: '#2196F3',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        marginBottom: 4,
+        borderTopLeftRadius: 8,
+        borderBottomLeftRadius: 8,
+        paddingHorizontal: 10,
+    },
+    demoteActionText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    demoteActionIcon: {
+        fontSize: 16,
+        marginTop: 2,
     },
     // 選択中の親情報
     selectedParentInfo: {

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Text, View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
+import DraggableFlatList from 'react-native-draggable-flatlist';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { StatusBar } from 'expo-status-bar';
 import { styles } from './src/styles/styles';
 import TaskInput from './src/components/TaskInput';
@@ -156,10 +157,6 @@ export default function App() {
       ));
     } else {
       setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
-      // 削除したタスクが選択中の親だった場合、選択を解除
-      if (selectedParentId === taskId) {
-        setSelectedParentId(null);
-      }
     }
   };
 
@@ -172,15 +169,102 @@ export default function App() {
     }
   };
 
-  // ドラッグ&ドロップ処理
+  // ドラッグ&ドロップ処理（親タスク）
   const handleDragEnd = ({ data }) => {
     setTasks(data);
   };
 
-  // タスクアイテムのレンダリング
-  const renderTaskItem = ({ item, drag, isActive }) => {
+  // 子タスクのドラッグ&ドロップ処理
+  const handleChildDragEnd = (parentId, newChildrenData) => {
+    setTasks(currentTasks => currentTasks.map(task =>
+      task.id === parentId
+        ? { ...task, children: newChildrenData }
+        : task
+    ));
+  };
+
+  // 子タスクを親タスクに移動
+  const promoteChildToParent = (childId, parentId) => {
+    let childTask = null;
+
+    // 子タスクを取得して親から削除
+    setTasks(currentTasks => {
+      return currentTasks.map(task => {
+        if (task.id === parentId) {
+          const child = task.children.find(c => c.id === childId);
+          if (child) {
+            childTask = { ...child, children: [] }; // 子タスクの子は引き継がない
+          }
+          return {
+            ...task,
+            children: task.children.filter(c => c.id !== childId)
+          };
+        }
+        return task;
+      });
+    });
+
+    // 子タスクを親タスクとして追加
+    if (childTask) {
+      setTasks(currentTasks => [...currentTasks, childTask]);
+    }
+  };
+
+  // 親タスクを直上の親の子にする
+  const demoteParentToChild = (taskId) => {
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+    if (taskIndex <= 0) return; // 最初のタスクまたは見つからない場合は何もしない
+
+    const targetTask = tasks[taskIndex];
+    const parentTask = tasks[taskIndex - 1];
+
+    // タスクを親から削除して、直上の親の子として追加
+    setTasks(currentTasks => {
+      const newTasks = currentTasks.filter(task => task.id !== taskId);
+      return newTasks.map(task =>
+        task.id === parentTask.id
+          ? { ...task, children: [...task.children, { ...targetTask, children: [] }] }
+          : task
+      );
+    });
+  };
+
+  // 右スワイプアクション（親タスク化） - 表示のみ
+  const renderRightAction = (childId, parentId) => {
     return (
-      <ScaleDecorator>
+      <View style={styles.promoteAction}>
+        <Text style={styles.promoteActionText}>親に</Text>
+        <Text style={styles.promoteActionIcon}>↗️</Text>
+      </View>
+    );
+  };
+
+  // 左スワイプアクション（子タスク化） - 表示のみ
+  const renderLeftAction = () => {
+    return (
+      <View style={styles.demoteAction}>
+        <Text style={styles.demoteActionText}>子に</Text>
+        <Text style={styles.demoteActionIcon}>↙️</Text>
+      </View>
+    );
+  };
+
+  // タスクアイテムのレンダリング
+  const renderTaskItem = ({ item, drag, isActive, getIndex }) => {
+    const index = getIndex();
+    const canDemote = index > 0; // 最初のタスク以外は子タスク化可能
+
+    return (
+      <Swipeable
+        onSwipeableOpen={(direction) => {
+          if (direction === 'left' && canDemote) {
+            demoteParentToChild(item.id);
+          }
+        }}
+        renderLeftActions={canDemote ? renderLeftAction : null}
+        enabled={!isDeleteMode && editingId !== item.id && canDemote}
+        leftThreshold={40}
+      >
         <View style={[
           styles.taskContainer,
           isActive && styles.taskContainerActive,
@@ -280,83 +364,122 @@ export default function App() {
           {/* 子タスク一覧 */}
           {item.children && item.children.length > 0 && !isActive && (
             <View style={styles.childrenContainer}>
-              {item.children.map((child) => (
-                <View key={child.id} style={styles.childTaskContainer}>
-                  <View style={[
-                    styles.childTaskItem,
-                    isDeleteMode && styles.childTaskItemDeleteMode
-                  ]}>
-                    {/* 子タスクの削除ボタン */}
-                    {isDeleteMode && (
-                      <TouchableOpacity
-                        style={styles.deleteModeButtonChild}
-                        onPress={() => deleteTask(child.id, true, item.id)}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={styles.deleteModeButtonTextChild}>✕</Text>
-                      </TouchableOpacity>
-                    )}
-
-                    <TouchableOpacity
-                      style={[
-                        styles.checkboxContainerChild,
-                        isDeleteMode && styles.checkboxContainerDisabled
-                      ]}
-                      onPress={() => toggleTask(child.id, true, item.id)}
-                      activeOpacity={isDeleteMode ? 1 : 0.7}
-                      disabled={isDeleteMode}
-                    >
-                      <View style={[
-                        styles.checkbox,
-                        styles.checkboxChild,
-                        child.completed && styles.checkboxCompleted,
-                        isDeleteMode && styles.checkboxDisabled
-                      ]}>
-                        <Text style={[styles.checkboxText, styles.checkboxTextChild]}>
-                          {child.completed ? '✓' : ''}
-                        </Text>
+              <DraggableFlatList
+                data={item.children}
+                onDragEnd={({ data }) => handleChildDragEnd(item.id, data)}
+                keyExtractor={(child) => child.id}
+                renderItem={({ item: child, drag: childDrag, isActive: isChildActive }) => (
+                  <Swipeable
+                    onSwipeableOpen={(direction) => {
+                      if (direction === 'right') {
+                        promoteChildToParent(child.id, item.id);
+                      }
+                    }}
+                    renderRightActions={() => (
+                      <View style={styles.promoteAction}>
+                        <Text style={styles.promoteActionText}>親に</Text>
+                        <Text style={styles.promoteActionIcon}>↗️</Text>
                       </View>
-                    </TouchableOpacity>
+                    )}
+                    enabled={!isDeleteMode && editingId !== child.id}
+                    rightThreshold={40}
+                  >
+                    <View style={[
+                      styles.childTaskContainer,
+                      isChildActive && styles.childTaskContainerActive
+                    ]}>
+                      <View style={[
+                        styles.childTaskItem,
+                        isDeleteMode && styles.childTaskItemDeleteMode,
+                        isChildActive && styles.childTaskItemActive
+                      ]}>
+                        {/* 子タスクの削除ボタン */}
+                        {isDeleteMode && (
+                          <TouchableOpacity
+                            style={styles.deleteModeButtonChild}
+                            onPress={() => deleteTask(child.id, true, item.id)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.deleteModeButtonTextChild}>✕</Text>
+                          </TouchableOpacity>
+                        )}
 
-                    <View style={[styles.taskTextContainer, styles.taskTextContainerChild]}>
-                      {editingId === child.id ? (
-                        <TextInput
-                          style={[styles.editInput, styles.editInputChild]}
-                          value={editingText}
-                          onChangeText={setEditingText}
-                          onSubmitEditing={saveEdit}
-                          onBlur={cancelEditing}
-                          autoFocus
-                        />
-                      ) : (
                         <TouchableOpacity
                           style={[
-                            styles.taskTextTouchable,
-                            styles.taskTextTouchableChild,
-                            isDeleteMode && styles.taskTextTouchableDisabled
+                            styles.checkboxContainerChild,
+                            isDeleteMode && styles.checkboxContainerDisabled
                           ]}
-                          onPress={() => startEditing(child.id, child.text, true, item.id)}
+                          onPress={() => toggleTask(child.id, true, item.id)}
                           activeOpacity={isDeleteMode ? 1 : 0.7}
                           disabled={isDeleteMode}
                         >
-                          <Text style={[
-                            styles.taskText,
-                            styles.taskTextChild,
-                            child.completed && styles.taskTextCompleted,
-                            isDeleteMode && styles.taskTextDisabled
+                          <View style={[
+                            styles.checkbox,
+                            styles.checkboxChild,
+                            child.completed && styles.checkboxCompleted,
+                            isDeleteMode && styles.checkboxDisabled
                           ]}>
-                            {child.text}
-                          </Text>
+                            <Text style={[styles.checkboxText, styles.checkboxTextChild]}>
+                              {child.completed ? '✓' : ''}
+                            </Text>
+                          </View>
                         </TouchableOpacity>
-                      )}
+
+                        <View style={[styles.taskTextContainer, styles.taskTextContainerChild]}>
+                          {editingId === child.id ? (
+                            <TextInput
+                              style={[styles.editInput, styles.editInputChild]}
+                              value={editingText}
+                              onChangeText={setEditingText}
+                              onSubmitEditing={saveEdit}
+                              onBlur={cancelEditing}
+                              autoFocus
+                            />
+                          ) : (
+                            <TouchableOpacity
+                              style={[
+                                styles.taskTextTouchable,
+                                styles.taskTextTouchableChild,
+                                isDeleteMode && styles.taskTextTouchableDisabled
+                              ]}
+                              onPress={() => startEditing(child.id, child.text, true, item.id)}
+                              activeOpacity={isDeleteMode ? 1 : 0.7}
+                              disabled={isDeleteMode}
+                            >
+                              <Text style={[
+                                styles.taskText,
+                                styles.taskTextChild,
+                                child.completed && styles.taskTextCompleted,
+                                isDeleteMode && styles.taskTextDisabled
+                              ]}>
+                                {child.text}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+
+                        {/* 子タスクのドラッグハンドル */}
+                        {!isDeleteMode && (
+                          <TouchableOpacity
+                            style={styles.childDragHandle}
+                            onLongPress={childDrag}
+                            delayLongPress={100}
+                          >
+                            <Text style={styles.childDragHandleText}>⋮⋮</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </View>
-                  </View>
-                </View>
-              ))}
+                  </Swipeable>
+                )}
+                activationDistance={10}
+                dragItemOverflow={false}
+                scrollEnabled={false}
+              />
             </View>
           )}
         </View>
-      </ScaleDecorator>
+      </Swipeable>
     );
   };
 
@@ -382,7 +505,7 @@ export default function App() {
         {!isDeleteMode && (
           <View style={styles.instructionContainer}>
             <Text style={styles.instructionText}>
-              💡 右下の「+」で新規追加 / 項目の「+」で子追加 / 「⋮⋮」長押しで並び替え
+              💡 右下の「+」で新規追加 / 項目の「+」で子追加 / 「⋮⋮」長押しで並び替え / 子タスクを右スワイプで親化 / 親タスクを左スワイプで子化
             </Text>
           </View>
         )}
