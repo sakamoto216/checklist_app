@@ -59,12 +59,27 @@ export const styles = StyleSheet.create({
         color: '#00695C',
         fontWeight: '500',
     },
+    // 削除モード表示
+    deleteModeIndicator: {
+        backgroundColor: 'rgba(255, 87, 34, 0.1)',
+        padding: 10,
+        marginBottom: 10,
+        borderRadius: 6,
+        borderLeftWidth: 3,
+        borderLeftColor: '#FF5722',
+    },
+    deleteModeText: {
+        fontSize: 12,
+        color: '#D84315',
+        fontWeight: '600',
+        textAlign: 'center',
+    },
     // タスクコンテナ
     taskList: {
         flex: 1,
     },
     taskListContent: {
-        paddingBottom: 20,
+        paddingBottom: 20, // フッターの高さ分余白を削除
     },
     taskContainer: {
         marginBottom: 4,
@@ -80,12 +95,16 @@ export const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 8,
     },
+    taskContainerDeleteMode: {
+        backgroundColor: 'rgba(255, 87, 34, 0.05)',
+    },
     // 親タスク
     parentTaskItem: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
-        paddingHorizontal: 10,
+        paddingLeft: 10,
+        paddingRight: 40,
         paddingVertical: 8,
         borderRadius: 8,
         shadowColor: '#000',
@@ -102,12 +121,53 @@ export const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: '#4CAF50',
     },
+    parentTaskItemDeleteMode: {
+        backgroundColor: '#FFF3E0',
+        borderLeftColor: '#FF5722',
+    },
+    // 削除モードボタン
+    deleteModeButton: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: '#FF3B30',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8,
+        shadowColor: '#FF3B30',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    deleteModeButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    deleteModeButtonChild: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#FF3B30',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 6,
+    },
+    deleteModeButtonTextChild: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
     // チェックボックス
     checkboxContainer: {
         padding: 4,
     },
     checkboxContainerChild: {
         padding: 3,
+    },
+    checkboxContainerDisabled: {
+        opacity: 0.5,
     },
     checkbox: {
         width: 24,
@@ -125,6 +185,9 @@ export const styles = StyleSheet.create({
     checkboxCompleted: {
         backgroundColor: '#007AFF',
         borderColor: '#007AFF',
+    },
+    checkboxDisabled: {
+        opacity: 0.5,
     },
     checkboxText: {
         color: '#fff',
@@ -150,16 +213,22 @@ export const styles = StyleSheet.create({
     taskTextTouchableChild: {
         paddingVertical: 1,
     },
+    taskTextTouchableDisabled: {
+        opacity: 0.6,
+    },
     taskText: {
         fontSize: 14,
         color: '#333',
     },
     taskTextChild: {
-        fontSize: 12,
+        fontSize: 14,
     },
     taskTextCompleted: {
         textDecorationLine: 'line-through',
         color: '#999',
+    },
+    taskTextDisabled: {
+        opacity: 0.6,
     },
     // 編集フィールド
     editInput: {
@@ -178,7 +247,6 @@ export const styles = StyleSheet.create({
     editActions: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 4,
     },
     buttonGroup: {
         flexDirection: 'row',
@@ -209,21 +277,30 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     selectButton: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
         backgroundColor: '#4CAF50',
-        paddingHorizontal: 6,
-        paddingVertical: 4,
-        borderRadius: 4,
-        marginRight: 3,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8,
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
     },
     selectButtonSelected: {
         backgroundColor: '#2196F3',
+        shadowColor: '#2196F3',
     },
     selectButtonText: {
         color: '#fff',
-        fontSize: 10,
+        fontSize: 16,
         fontWeight: 'bold',
     },
     selectButtonTextSelected: {
+        fontSize: 14,
         color: '#fff',
     },
     editButton: {
@@ -275,9 +352,7 @@ export const styles = StyleSheet.create({
     },
     // 子タスク
     childrenContainer: {
-        marginTop: 4,
         marginLeft: 20,
-        marginRight: 36,
     },
     childTaskContainer: {
         marginTop: 3,
@@ -291,6 +366,10 @@ export const styles = StyleSheet.create({
         borderRadius: 6,
         borderLeftWidth: 6,
         borderLeftColor: '#4CAF50',
+    },
+    childTaskItemDeleteMode: {
+        backgroundColor: '#FFF8E1',
+        borderLeftColor: '#FF9800',
     },
     // 選択中の親情報
     selectedParentInfo: {
@@ -319,5 +398,61 @@ export const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 12,
         fontWeight: 'bold',
+    },
+    // フローティングボタン群
+    // 追加ボタン（+）
+    floatingAddButton: {
+        position: 'absolute',
+        bottom: 100, // 削除ボタンの上に配置
+        right: 30,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#007AFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#007AFF',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+    floatingAddButtonText: {
+        fontSize: 28,
+        color: '#fff',
+        fontWeight: '300',
+    },
+
+    // 削除ボタン（🗑）
+    floatingDeleteButton: {
+        position: 'absolute',
+        bottom: 30,
+        right: 30,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    floatingDeleteButtonActive: {
+        backgroundColor: '#fff',
+        shadowColor: '#4CAF50',
+        borderColor: '#4CAF50',
+    },
+    floatingDeleteButtonText: {
+        fontSize: 20,
+        color: '#FF5722',
+    },
+    floatingDeleteButtonTextActive: {
+        fontSize: 24,
+        color: '#4CAF50',
     },
 });

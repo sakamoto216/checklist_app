@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { Text, View, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
+import { StatusBar } from 'expo-status-bar';
 import { styles } from './src/styles/styles';
 import TaskInput from './src/components/TaskInput';
 
 export default function App() {
   // 基本状態
   const [tasks, setTasks] = useState([]);
-  const [inputText, setInputText] = useState('');
-  const [selectedParentId, setSelectedParentId] = useState(null);
 
   // 編集状態
   const [editingId, setEditingId] = useState(null);
@@ -17,32 +16,33 @@ export default function App() {
   const [isEditingChild, setIsEditingChild] = useState(false);
   const [editingParentId, setEditingParentId] = useState(null);
 
-  // 新しいタスクを追加
+  // 削除モード状態
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+
+  // 新しいタスクを追加（空の編集状態で）
   const addTask = () => {
-    if (inputText.trim() !== '') {
-      const newTask = {
-        id: Date.now().toString(),
-        text: inputText,
-        completed: false,
-        children: [],
-      };
+    const newTask = {
+      id: Date.now().toString(),
+      text: '',
+      completed: false,
+      children: [],
+    };
 
-      if (selectedParentId) {
-        setTasks(currentTasks => currentTasks.map(task =>
-          task.id === selectedParentId
-            ? { ...task, children: [...task.children, newTask] }
-            : task
-        ));
-      } else {
-        setTasks(currentTasks => [...currentTasks, newTask]);
-      }
+    // 親タスクとして追加
+    setTasks(currentTasks => [...currentTasks, newTask]);
 
-      setInputText('');
-    }
+    // 親タスクの編集モードを開始
+    setEditingId(newTask.id);
+    setEditingText('');
+    setIsEditingChild(false);
+    setEditingParentId(null);
   };
 
   // 編集関連
   const startEditing = (taskId, currentText, isChild = false, parentId = null) => {
+    // 削除モード中は編集不可
+    if (isDeleteMode) return;
+
     setEditingId(taskId);
     setEditingText(currentText);
     setIsEditingChild(isChild);
@@ -50,6 +50,11 @@ export default function App() {
   };
 
   const cancelEditing = () => {
+    // 編集中のアイテムが空文字の場合は削除
+    if (editingId && editingText.trim() === '') {
+      deleteTask(editingId, isEditingChild, editingParentId);
+    }
+
     setEditingId(null);
     setEditingText('');
     setIsEditingChild(false);
@@ -58,7 +63,9 @@ export default function App() {
 
   const saveEdit = () => {
     if (editingText.trim() === '') {
-      Alert.alert('エラー', 'アイテム名を入力してください。');
+      // 空の場合は削除
+      deleteTask(editingId, isEditingChild, editingParentId);
+      cancelEditing();
       return;
     }
 
@@ -87,10 +94,34 @@ export default function App() {
   };
 
   const toggleParentSelection = (parentId) => {
-    setSelectedParentId(selectedParentId === parentId ? null : parentId);
+    // 削除モード中は親選択不可
+    if (isDeleteMode) return;
+
+    // 直接子タスクを追加して編集モードに入る
+    const newChildTask = {
+      id: Date.now().toString(),
+      text: '',
+      completed: false,
+      children: [],
+    };
+
+    setTasks(currentTasks => currentTasks.map(task =>
+      task.id === parentId
+        ? { ...task, children: [...task.children, newChildTask] }
+        : task
+    ));
+
+    // 子タスクの編集モードを開始
+    setEditingId(newChildTask.id);
+    setEditingText('');
+    setIsEditingChild(true);
+    setEditingParentId(parentId);
   };
 
   const toggleTask = (taskId, isChild = false, parentId = null) => {
+    // 削除モード中はチェック不可
+    if (isDeleteMode) return;
+
     if (isChild) {
       setTasks(currentTasks => currentTasks.map(task =>
         task.id === parentId
@@ -114,40 +145,34 @@ export default function App() {
   };
 
   const deleteTask = (taskId, isChild = false, parentId = null) => {
-    Alert.alert(
-      '削除確認',
-      'このアイテムを削除しますか？',
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '削除',
-          style: 'destructive',
-          onPress: () => {
-            if (isChild) {
-              setTasks(currentTasks => currentTasks.map(task =>
-                task.id === parentId
-                  ? {
-                    ...task,
-                    children: task.children.filter(child => child.id !== taskId)
-                  }
-                  : task
-              ));
-            } else {
-              setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
-              if (selectedParentId === taskId) {
-                setSelectedParentId(null);
-              }
-            }
-            if (editingId === taskId) {
-              cancelEditing();
-            }
+    if (isChild) {
+      setTasks(currentTasks => currentTasks.map(task =>
+        task.id === parentId
+          ? {
+            ...task,
+            children: task.children.filter(child => child.id !== taskId)
           }
-        }
-      ]
-    );
+          : task
+      ));
+    } else {
+      setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
+      // 削除したタスクが選択中の親だった場合、選択を解除
+      if (selectedParentId === taskId) {
+        setSelectedParentId(null);
+      }
+    }
   };
 
-  // ドラッグ&ドロップの並び替えハンドラー
+  // 削除モードの切り替え
+  const toggleDeleteMode = () => {
+    setIsDeleteMode(!isDeleteMode);
+    // 削除モードを開始する時は、編集モードを解除
+    if (!isDeleteMode) {
+      cancelEditing();
+    }
+  };
+
+  // ドラッグ&ドロップ処理
   const handleDragEnd = ({ data }) => {
     setTasks(data);
   };
@@ -158,19 +183,38 @@ export default function App() {
       <ScaleDecorator>
         <View style={[
           styles.taskContainer,
-          isActive && styles.taskContainerActive
+          isActive && styles.taskContainerActive,
+          isDeleteMode && styles.taskContainerDeleteMode
         ]}>
-          {/* 親タスク */}
           <View style={[
             styles.parentTaskItem,
-            selectedParentId === item.id && styles.parentTaskItemSelected
+            isDeleteMode && styles.parentTaskItemDeleteMode
           ]}>
+            {/* 削除モード時の削除ボタン */}
+            {isDeleteMode && (
+              <TouchableOpacity
+                style={styles.deleteModeButton}
+                onPress={() => deleteTask(item.id)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.deleteModeButtonText}>✕</Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
-              style={styles.checkboxContainer}
+              style={[
+                styles.checkboxContainer,
+                isDeleteMode && styles.checkboxContainerDisabled
+              ]}
               onPress={() => toggleTask(item.id)}
-              activeOpacity={0.7}
+              activeOpacity={isDeleteMode ? 1 : 0.7}
+              disabled={isDeleteMode}
             >
-              <View style={[styles.checkbox, item.completed && styles.checkboxCompleted]}>
+              <View style={[
+                styles.checkbox,
+                item.completed && styles.checkboxCompleted,
+                isDeleteMode && styles.checkboxDisabled
+              ]}>
                 <Text style={styles.checkboxText}>
                   {item.completed ? '✓' : ''}
                 </Text>
@@ -189,13 +233,18 @@ export default function App() {
                 />
               ) : (
                 <TouchableOpacity
-                  style={styles.taskTextTouchable}
+                  style={[
+                    styles.taskTextTouchable,
+                    isDeleteMode && styles.taskTextTouchableDisabled
+                  ]}
                   onPress={() => startEditing(item.id, item.text)}
-                  activeOpacity={0.7}
+                  activeOpacity={isDeleteMode ? 1 : 0.7}
+                  disabled={isDeleteMode}
                 >
                   <Text style={[
                     styles.taskText,
-                    item.completed && styles.taskTextCompleted
+                    item.completed && styles.taskTextCompleted,
+                    isDeleteMode && styles.taskTextDisabled
                   ]}>
                     {item.text}
                   </Text>
@@ -203,68 +252,29 @@ export default function App() {
               )}
             </View>
 
-            {/* ボタン群 */}
-            {editingId === item.id ? (
+            {/* 通常モード時のボタン群 */}
+            {!isDeleteMode && editingId !== item.id && (
               <View style={styles.editActions}>
                 <TouchableOpacity
-                  style={styles.saveButton}
-                  onPress={saveEdit}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.saveButtonText}>保存</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={cancelEditing}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.cancelButtonText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.buttonGroup}>
-                <TouchableOpacity
-                  style={[
-                    styles.selectButton,
-                    selectedParentId === item.id && styles.selectButtonSelected
-                  ]}
+                  style={styles.selectButton}
                   onPress={() => toggleParentSelection(item.id)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[
-                    styles.selectButtonText,
-                    selectedParentId === item.id && styles.selectButtonTextSelected
-                  ]}>
-                    {selectedParentId === item.id ? '完了' : '子追加'}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() => startEditing(item.id, item.text)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.editButtonText}>編集</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => deleteTask(item.id)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.deleteButtonText}>削除</Text>
+                  <Text style={styles.selectButtonText}>+</Text>
                 </TouchableOpacity>
               </View>
             )}
 
             {/* ドラッグハンドル */}
-            <TouchableOpacity
-              style={styles.dragHandle}
-              onLongPress={drag}
-              delayLongPress={100}
-            >
-              <Text style={styles.dragHandleText}>⋮⋮</Text>
-            </TouchableOpacity>
+            {!isDeleteMode && (
+              <TouchableOpacity
+                style={styles.dragHandle}
+                onLongPress={drag}
+                delayLongPress={100}
+              >
+                <Text style={styles.dragHandleText}>⋮⋮</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* 子タスク一覧 */}
@@ -272,13 +282,36 @@ export default function App() {
             <View style={styles.childrenContainer}>
               {item.children.map((child) => (
                 <View key={child.id} style={styles.childTaskContainer}>
-                  <View style={styles.childTaskItem}>
+                  <View style={[
+                    styles.childTaskItem,
+                    isDeleteMode && styles.childTaskItemDeleteMode
+                  ]}>
+                    {/* 子タスクの削除ボタン */}
+                    {isDeleteMode && (
+                      <TouchableOpacity
+                        style={styles.deleteModeButtonChild}
+                        onPress={() => deleteTask(child.id, true, item.id)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.deleteModeButtonTextChild}>✕</Text>
+                      </TouchableOpacity>
+                    )}
+
                     <TouchableOpacity
-                      style={styles.checkboxContainerChild}
+                      style={[
+                        styles.checkboxContainerChild,
+                        isDeleteMode && styles.checkboxContainerDisabled
+                      ]}
                       onPress={() => toggleTask(child.id, true, item.id)}
-                      activeOpacity={0.7}
+                      activeOpacity={isDeleteMode ? 1 : 0.7}
+                      disabled={isDeleteMode}
                     >
-                      <View style={[styles.checkbox, styles.checkboxChild, child.completed && styles.checkboxCompleted]}>
+                      <View style={[
+                        styles.checkbox,
+                        styles.checkboxChild,
+                        child.completed && styles.checkboxCompleted,
+                        isDeleteMode && styles.checkboxDisabled
+                      ]}>
                         <Text style={[styles.checkboxText, styles.checkboxTextChild]}>
                           {child.completed ? '✓' : ''}
                         </Text>
@@ -297,28 +330,26 @@ export default function App() {
                         />
                       ) : (
                         <TouchableOpacity
-                          style={[styles.taskTextTouchable, styles.taskTextTouchableChild]}
+                          style={[
+                            styles.taskTextTouchable,
+                            styles.taskTextTouchableChild,
+                            isDeleteMode && styles.taskTextTouchableDisabled
+                          ]}
                           onPress={() => startEditing(child.id, child.text, true, item.id)}
-                          activeOpacity={0.7}
+                          activeOpacity={isDeleteMode ? 1 : 0.7}
+                          disabled={isDeleteMode}
                         >
                           <Text style={[
                             styles.taskText,
                             styles.taskTextChild,
-                            child.completed && styles.taskTextCompleted
+                            child.completed && styles.taskTextCompleted,
+                            isDeleteMode && styles.taskTextDisabled
                           ]}>
                             {child.text}
                           </Text>
                         </TouchableOpacity>
                       )}
                     </View>
-
-                    <TouchableOpacity
-                      style={[styles.deleteButton, styles.deleteButtonChild]}
-                      onPress={() => deleteTask(child.id, true, item.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.deleteButtonText, styles.deleteButtonTextChild]}>削除</Text>
-                    </TouchableOpacity>
                   </View>
                 </View>
               ))}
@@ -331,41 +362,28 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar style="light" />
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <Text style={styles.title}>持ち物チェックリスト</Text>
 
-        {/* 使用方法の説明 */}
-        <View style={styles.instructionContainer}>
-          <Text style={styles.instructionText}>
-            💡 右側の「⋮⋮」を長押しして並び替え
-          </Text>
-        </View>
-
-        <TaskInput
-          inputText={inputText}
-          onChangeText={setInputText}
-          onSubmit={addTask}
-          placeholder={
-            selectedParentId
-              ? "子アイテムを入力してください"
-              : "新しいアイテムを入力してください"
-          }
-        />
-
-        {selectedParentId && (
-          <View style={styles.selectedParentInfo}>
-            <Text style={styles.selectedParentText}>
-              選択中: {tasks.find(t => t.id === selectedParentId)?.text}
+        {/* 削除モード表示 */}
+        {isDeleteMode && (
+          <View style={styles.deleteModeIndicator}>
+            <Text style={styles.deleteModeText}>
+              🗑️ 削除モード - 削除したい項目の「✕」をタップ
             </Text>
-            <TouchableOpacity
-              onPress={() => setSelectedParentId(null)}
-              style={styles.clearSelectionButton}
-            >
-              <Text style={styles.clearSelectionText}>選択解除</Text>
-            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* 使用方法の説明 */}
+        {!isDeleteMode && (
+          <View style={styles.instructionContainer}>
+            <Text style={styles.instructionText}>
+              💡 右下の「+」で新規追加 / 項目の「+」で子追加 / 「⋮⋮」長押しで並び替え
+            </Text>
           </View>
         )}
 
@@ -379,7 +397,38 @@ export default function App() {
           contentContainerStyle={styles.taskListContent}
           activationDistance={10}
           dragItemOverflow={true}
+          // 削除モード時はドラッグ無効
+          scrollEnabled={!isDeleteMode}
         />
+
+        {/* フローティングボタン群 */}
+        {/* 追加ボタン */}
+        {!isDeleteMode && (
+          <TouchableOpacity
+            style={styles.floatingAddButton}
+            onPress={addTask}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.floatingAddButtonText}>+</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* 削除モード切り替えボタン */}
+        <TouchableOpacity
+          style={[
+            styles.floatingDeleteButton,
+            isDeleteMode && styles.floatingDeleteButtonActive
+          ]}
+          onPress={toggleDeleteMode}
+          activeOpacity={0.7}
+        >
+          <Text style={[
+            styles.floatingDeleteButtonText,
+            isDeleteMode && styles.floatingDeleteButtonTextActive
+          ]}>
+            {isDeleteMode ? '✓' : '🗑'}
+          </Text>
+        </TouchableOpacity>
       </KeyboardAvoidingView>
     </GestureHandlerRootView>
   );

@@ -12,8 +12,11 @@ const TaskInput = ({
     return (
         <View style={styles.inputContainer}>
             <TextInput
-                style={styles.input}
-                placeholder={placeholder}
+                style={[
+                    styles.input,
+                    disabled && { backgroundColor: '#f5f5f5', color: '#999' }
+                ]}
+                placeholder={disabled ? "削除モード中は入力できません" : placeholder}
                 value={inputText}
                 onChangeText={onChangeText}
                 onSubmitEditing={onSubmit}
