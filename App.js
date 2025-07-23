@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Text, View, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { styles } from './src/styles/styles';
-import ModeIndicators from './src/components/ModeIndicators';
 import TaskInput from './src/components/TaskInput';
 import DropZone from './src/components/DropZone';
 import ChildTaskItem from './src/components/ChildTaskItem';
@@ -444,19 +443,6 @@ export default function App() {
       <Text style={styles.counter}>
         ✅: {stats.completed} / {stats.total}
       </Text>
-
-      <ModeIndicators
-        selectedParentId={selectedParentId}
-        selectedParentName={getSelectedParentName()}
-        onCancelParentSelection={() => setSelectedParentId(null)}
-        editingId={editingId}
-        editingText={editingText}
-        tasks={tasks}
-        onCancelEditing={cancelEditing}
-        isDragging={isDragging}
-        isChildDrag={isChildDrag}
-        onCancelDrag={endDrag}
-      />
 
       <FlatList
         data={tasks}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { styles } from '../styles/styles';
 
 const ModeIndicators = ({
@@ -7,41 +7,25 @@ const ModeIndicators = ({
     selectedParentName,
     onCancelParentSelection,
     editingId,
-    editingText,
-    tasks,
+    editingItemName,
     onCancelEditing,
     isDragging,
     isChildDrag,
     onCancelDrag
 }) => {
-
-    // 編集中のアイテムの元の名前を取得
-    const getEditingItemName = () => {
-        if (!editingId || !tasks) return '';
-
-        // 親アイテムから検索
-        for (const task of tasks) {
-            if (task.id === editingId) {
-                return task.text;
-            }
-            // 子アイテムから検索
-            for (const child of task.children) {
-                if (child.id === editingId) {
-                    return child.text;
-                }
-            }
-        }
-        return '';
-    };
-
     return (
         <>
             {/* 親選択モード表示 */}
             {selectedParentId && (
                 <View style={styles.modeIndicator}>
-                    <Text style={[styles.modeText, { flex: 1, flexWrap: 'wrap' }]} numberOfLines={2}>
-                        {selectedParentName}へ子を追加
-                    </Text>
+                    <View style={{ flex: 1, paddingRight: 8 }}>
+                        <Text style={[styles.modeText, {
+                            flexWrap: 'wrap',
+                            ...(Platform.OS === 'android' && { textAlignVertical: 'center' })
+                        }]}>
+                            {selectedParentName}へ子を追加
+                        </Text>
+                    </View>
                     <TouchableOpacity
                         style={styles.cancelButton}
                         onPress={onCancelParentSelection}
@@ -53,15 +37,43 @@ const ModeIndicators = ({
 
             {/* 編集モード表示 */}
             {editingId && (
-                <View style={styles.editModeIndicator}>
-                    <Text style={[styles.editModeText, { flex: 1, flexWrap: 'wrap' }]} numberOfLines={2}>
-                        {getEditingItemName()}の編集
-                    </Text>
+                <View style={[styles.editModeIndicator, { minHeight: 50 }]}>
+                    <View style={{
+                        flex: 1,
+                        paddingRight: 8,
+                        justifyContent: 'center',
+                        minHeight: 40
+                    }}>
+                        <Text
+                            style={{
+                                color: '#1976D2',
+                                fontWeight: 'bold',
+                                fontSize: 16,
+                                fontFamily: Platform.OS === 'android' ? 'Roboto' : 'System',
+                                includeFontPadding: false,
+                                textAlignVertical: 'center',
+                                lineHeight: 20,
+                                letterSpacing: 0,
+                                writingDirection: 'ltr',
+                            }}
+                            numberOfLines={2}
+                            ellipsizeMode="tail"
+                        >
+                            {editingItemName ? `${editingItemName}の編集` : 'アイテムの編集'}
+                        </Text>
+                    </View>
                     <TouchableOpacity
                         style={styles.cancelButton}
                         onPress={onCancelEditing}
                     >
-                        <Text style={styles.cancelModeText}>×</Text>
+                        <Text style={{
+                            color: '#fff',
+                            fontSize: 12,
+                            fontWeight: 'bold',
+                            textAlign: 'center',
+                            includeFontPadding: false,
+                            textAlignVertical: 'center'
+                        }}>×</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -69,9 +81,14 @@ const ModeIndicators = ({
             {/* ドラッグモード表示 */}
             {isDragging && (
                 <View style={styles.dragModeIndicator}>
-                    <Text style={[styles.dragModeText, { flex: 1, flexWrap: 'wrap' }]}>
-                        タップで点線で囲われた箇所に移動
-                    </Text>
+                    <View style={{ flex: 1, paddingRight: 8 }}>
+                        <Text style={[styles.dragModeText, {
+                            flexWrap: 'wrap',
+                            ...(Platform.OS === 'android' && { textAlignVertical: 'center' })
+                        }]}>
+                            タップで点線で囲われた箇所に移動
+                        </Text>
+                    </View>
                     <TouchableOpacity
                         style={styles.cancelButton}
                         onPress={onCancelDrag}
