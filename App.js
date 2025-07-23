@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Text, View, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { styles } from './src/styles/styles';
 import TaskInput from './src/components/TaskInput';
 import DropZone from './src/components/DropZone';
 import ChildTaskItem from './src/components/ChildTaskItem';
 import ParentTaskItem from './src/components/ParentTaskItem';
+import DraggableParentTaskItem from './src/components/DraggableParentTaskItem';
 
 export default function App() {
   // 基本状態
@@ -12,11 +14,10 @@ export default function App() {
   const [inputText, setInputText] = useState('');
   const [selectedParentId, setSelectedParentId] = useState(null);
 
-  // ドラッグ状態
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [isChildDrag, setIsChildDrag] = useState(false);
-  const [dragParentId, setDragParentId] = useState(null);
+  // 新しいドラッグ&ドロップ状態
+  const [draggedTaskId, setDraggedTaskId] = useState(null);
+  const [draggedTaskIndex, setDraggedTaskIndex] = useState(-1);
+  const [dropTargetIndex, setDropTargetIndex] = useState(-1);
 
   // 編集状態
   const [editingId, setEditingId] = useState(null);
@@ -53,7 +54,7 @@ export default function App() {
 
   // 編集モードを開始
   const startEditing = (taskId, currentText, isChild = false, parentId = null) => {
-    if (isDragging) return; // ドラッグ中は編集不可
+    // if (isDragging) return; // ドラッグ中は編集不可 → 一時的に無効化
 
     setEditingId(taskId);
     setEditingText(currentText);
@@ -107,20 +108,31 @@ export default function App() {
     setSelectedParentId(selectedParentId === parentId ? null : parentId);
   };
 
-  // ドラッグ開始
-  const startDrag = (item, isChild = false, parentId = null) => {
-    setIsDragging(true);
-    setDraggedItem(item);
-    setIsChildDrag(isChild);
-    setDragParentId(parentId);
+  // 新しいドラッグ&ドロップ機能
+  const handleDragStart = (taskId, taskIndex) => {
+    setDraggedTaskId(taskId);
+    setDraggedTaskIndex(taskIndex);
   };
 
-  // ドラッグ終了
-  const endDrag = () => {
-    setIsDragging(false);
-    setDraggedItem(null);
-    setIsChildDrag(false);
-    setDragParentId(null);
+  const handleDragEnd = () => {
+    if (draggedTaskIndex !== -1 && dropTargetIndex !== -1 && draggedTaskIndex !== dropTargetIndex) {
+      // 配列の並び替えを実行
+      setTasks(currentTasks => {
+        const newTasks = [...currentTasks];
+        const [movedTask] = newTasks.splice(draggedTaskIndex, 1);
+        newTasks.splice(dropTargetIndex, 0, movedTask);
+        return newTasks;
+      });
+    }
+
+    // 状態をリセット
+    setDraggedTaskId(null);
+    setDraggedTaskIndex(-1);
+    setDropTargetIndex(-1);
+  };
+
+  const handleDragOver = (targetIndex) => {
+    setDropTargetIndex(targetIndex);
   };
 
   // 子アイテムを指定位置に移動
@@ -300,33 +312,9 @@ export default function App() {
     }
   };
 
-  // ドロップゾーンの表示
+  // ドロップゾーンの表示（一時的に無効化）
   const renderDropZone = (index) => {
-    const handleDrop = () => {
-      if (isChildDrag) {
-        // 子アイテムを指定位置に移動
-        moveChildToPosition(draggedItem.id, dragParentId, index);
-      } else {
-        // 親アイテムの順序変更
-        setTasks(currentTasks => {
-          const fromIndex = currentTasks.findIndex(t => t.id === draggedItem.id);
-          const newTasks = [...currentTasks];
-          const [movedItem] = newTasks.splice(fromIndex, 1);
-          newTasks.splice(index, 0, movedItem);
-          return newTasks;
-        });
-      }
-      endDrag();
-    };
-
-    return (
-      <DropZone
-        isDragging={isDragging}
-        index={index}
-        onDrop={handleDrop}
-        type="between"
-      />
-    );
+    return null; // ドロップゾーンを無効化
   };
 
   // 子タスクの表示
@@ -336,9 +324,9 @@ export default function App() {
       child={child}
       parentId={parentId}
       parentChildren={parentChildren}
-      isDragging={isDragging}
-      draggedItem={draggedItem}
-      isChildDrag={isChildDrag}
+      isDragging={false} // 一時的に固定値
+      draggedItem={null} // 一時的に固定値
+      isChildDrag={false} // 一時的に固定値
       editingId={editingId}
       editingText={editingText}
       onEditingTextChange={setEditingText}
@@ -346,24 +334,25 @@ export default function App() {
       onStartEditing={startEditing}
       onSaveEdit={saveEdit}
       onCancelEditing={cancelEditing}
-      onStartDrag={startDrag}
+      onStartDrag={() => { }} // 一時的に空関数
       onDeleteTask={deleteTask}
       onMoveParentToChild={moveParentToChild}
-      onEndDrag={endDrag}
+      onEndDrag={() => { }} // 一時的に空関数
       onReorderChildren={reorderChildrenInParent}
       onMoveChildToAnotherParent={moveChildToAnotherParent}
     />
   );
 
-  // 親タスクの表示
+  // 親タスクの表示（ドラッグ対応）
   const renderTask = ({ item, index }) => (
-    <ParentTaskItem
+    <DraggableParentTaskItem
       item={item}
       index={index}
       selectedParentId={selectedParentId}
-      isDragging={isDragging}
-      draggedItem={draggedItem}
-      isChildDrag={isChildDrag}
+      isDragging={draggedTaskId === item.id}
+      isDropTarget={dropTargetIndex === index}
+      draggedItem={null}
+      isChildDrag={false}
       editingId={editingId}
       editingText={editingText}
       onEditingTextChange={setEditingText}
@@ -371,14 +360,17 @@ export default function App() {
       onStartEditing={startEditing}
       onSaveEdit={saveEdit}
       onCancelEditing={cancelEditing}
-      onStartDrag={startDrag}
+      onStartDrag={() => { }}
       onDeleteTask={deleteTask}
       onMoveParentToChild={moveParentToChild}
-      onEndDrag={endDrag}
+      onEndDrag={() => { }}
       onToggleParentSelection={toggleParentSelection}
       onMoveChildToAnotherParent={moveChildToAnotherParent}
       renderDropZone={renderDropZone}
       renderChildTask={renderChildTask}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
     />
   );
 
@@ -433,58 +425,34 @@ export default function App() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : .3}
-    >
-      <Text style={styles.title}>GearList</Text>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : .3}
+      >
+        <Text style={styles.title}>GearList</Text>
 
-      <Text style={styles.counter}>
-        ✅: {stats.completed} / {stats.total}
-      </Text>
+        <Text style={styles.counter}>
+          ✅: {stats.completed} / {stats.total}
+        </Text>
 
-      <FlatList
-        data={tasks}
-        renderItem={renderTask}
-        keyExtractor={(item) => item.id}
-        style={styles.taskList}
-        contentContainerStyle={styles.taskListContent}
-        ListFooterComponent={() => {
-          const handleFinalDrop = () => {
-            if (isChildDrag) {
-              // 子アイテムを最後に移動
-              moveChildToPosition(draggedItem.id, dragParentId, tasks.length);
-            } else {
-              // 親アイテムを最後に移動
-              setTasks(currentTasks => {
-                const fromIndex = currentTasks.findIndex(t => t.id === draggedItem.id);
-                const newTasks = [...currentTasks];
-                const [movedItem] = newTasks.splice(fromIndex, 1);
-                newTasks.push(movedItem);
-                return newTasks;
-              });
-            }
-            endDrag();
-          };
+        <FlatList
+          data={tasks}
+          renderItem={renderTask}
+          keyExtractor={(item) => item.id}
+          style={styles.taskList}
+          contentContainerStyle={styles.taskListContent}
+        />
 
-          return (
-            <DropZone
-              isDragging={isDragging}
-              onDrop={handleFinalDrop}
-              type="final"
-            />
-          );
-        }}
-      />
-
-      <TaskInput
-        inputText={inputText}
-        onChangeText={setInputText}
-        onSubmit={addTask}
-        placeholder={selectedParentId ? `「${getSelectedParentName()}」に新しいアイテムを入力...` : "新しいアイテムを入力..."}
-        disabled={!!editingId}
-      />
-    </KeyboardAvoidingView>
+        <TaskInput
+          inputText={inputText}
+          onChangeText={setInputText}
+          onSubmit={addTask}
+          placeholder={selectedParentId ? `「${getSelectedParentName()}」に新しいアイテムを入力...` : "新しいアイテムを入力..."}
+          disabled={!!editingId}
+        />
+      </KeyboardAvoidingView>
+    </GestureHandlerRootView>
   );
 }
