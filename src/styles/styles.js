@@ -45,6 +45,21 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
+    // 使用方法の説明
+    instructionContainer: {
+        backgroundColor: 'rgba(0, 150, 136, 0.1)',
+        padding: 8,
+        marginBottom: 10,
+        borderRadius: 6,
+        borderLeftWidth: 3,
+        borderLeftColor: '#009688',
+    },
+    instructionText: {
+        fontSize: 11,
+        color: '#00695C',
+        fontWeight: '500',
+    },
+    // タスクコンテナ
     taskList: {
         flex: 1,
     },
@@ -52,14 +67,26 @@ export const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     taskContainer: {
-        marginBottom: 5,
+        marginBottom: 4,
     },
+    taskContainerActive: {
+        backgroundColor: 'rgba(0, 150, 136, 0.1)',
+        borderRadius: 8,
+        borderWidth: 2,
+        borderColor: '#009688',
+        shadowColor: '#009688',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+    // 親タスク
     parentTaskItem: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
-        paddingHorizontal: 15,
-        paddingVertical: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
         borderRadius: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
@@ -68,37 +95,32 @@ export const styles = StyleSheet.create({
         elevation: 2,
         borderLeftWidth: 6,
         borderLeftColor: '#007AFF',
+        minHeight: 50,
     },
     parentTaskItemSelected: {
         backgroundColor: '#E8F5E8',
         borderWidth: 2,
         borderColor: '#4CAF50',
     },
-    childTaskContainer: {
-        marginLeft: 25,
-        marginTop: 5,
-    },
-    childTaskItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        borderRadius: 6,
-        borderLeftWidth: 6,
-        borderLeftColor: '#4CAF50',
-    },
+    // チェックボックス
     checkboxContainer: {
-        padding: 8,
+        padding: 4,
+    },
+    checkboxContainerChild: {
+        padding: 3,
     },
     checkbox: {
-        width: 28,
-        height: 28,
+        width: 24,
+        height: 24,
         borderWidth: 2,
         borderColor: '#ddd',
         borderRadius: 4,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    checkboxChild: {
+        width: 20,
+        height: 20,
     },
     checkboxCompleted: {
         backgroundColor: '#007AFF',
@@ -107,168 +129,195 @@ export const styles = StyleSheet.create({
     checkboxText: {
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: 14,
     },
+    checkboxTextChild: {
+        fontSize: 12,
+    },
+    // テキストエリア
     taskTextContainer: {
-        flex: 1,
-        paddingVertical: 8,
-        paddingHorizontal: 12,
+        flex: 2,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+    },
+    taskTextContainerChild: {
+        paddingHorizontal: 6,
     },
     taskTextTouchable: {
         flex: 1,
-        paddingVertical: 4,
+        paddingVertical: 2,
+    },
+    taskTextTouchableChild: {
+        paddingVertical: 1,
     },
     taskText: {
-        fontSize: 16,
+        fontSize: 14,
         color: '#333',
+    },
+    taskTextChild: {
+        fontSize: 12,
     },
     taskTextCompleted: {
         textDecorationLine: 'line-through',
         color: '#999',
     },
-    editContainer: {
-        flex: 1,
-    },
+    // 編集フィールド
     editInput: {
         borderWidth: 1,
         borderColor: '#2196F3',
         borderRadius: 4,
-        padding: 8,
+        padding: 6,
         backgroundColor: '#fff',
-        fontSize: 16,
-        marginBottom: 8,
+        fontSize: 14,
     },
-    editButtons: {
+    editInputChild: {
+        fontSize: 12,
+        padding: 4,
+    },
+    // ボタン群
+    editActions: {
         flexDirection: 'row',
-        justifyContent: 'flex-end',
+        alignItems: 'center',
+        marginRight: 4,
+    },
+    buttonGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 4,
     },
     saveButton: {
         backgroundColor: '#4CAF50',
-        paddingHorizontal: 12,
-        paddingVertical: 9,
+        paddingHorizontal: 6,
+        paddingVertical: 4,
         borderRadius: 4,
-        marginRight: 8,
+        marginRight: 3,
     },
     saveButtonText: {
         color: '#fff',
-        fontSize: 14,
+        fontSize: 11,
         fontWeight: 'bold',
     },
-    cancelEditButton: {
+    cancelButton: {
         backgroundColor: '#FF5722',
-        paddingHorizontal: 12,
-        paddingVertical: 9,
+        paddingHorizontal: 6,
+        paddingVertical: 4,
         borderRadius: 4,
-        marginRight: 8,
     },
-    cancelEditButtonText: {
+    cancelButtonText: {
         color: '#fff',
-        fontSize: 14,
+        fontSize: 11,
+        fontWeight: 'bold',
+    },
+    selectButton: {
+        backgroundColor: '#4CAF50',
+        paddingHorizontal: 6,
+        paddingVertical: 4,
+        borderRadius: 4,
+        marginRight: 3,
+    },
+    selectButtonSelected: {
+        backgroundColor: '#2196F3',
+    },
+    selectButtonText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    selectButtonTextSelected: {
+        color: '#fff',
+    },
+    editButton: {
+        backgroundColor: '#FF9800',
+        paddingHorizontal: 6,
+        paddingVertical: 4,
+        borderRadius: 4,
+        marginRight: 3,
+    },
+    editButtonText: {
+        color: '#fff',
+        fontSize: 10,
         fontWeight: 'bold',
     },
     deleteButton: {
         backgroundColor: '#FF3B30',
-        paddingHorizontal: 12,
-        paddingVertical: 9,
+        paddingHorizontal: 6,
+        paddingVertical: 4,
         borderRadius: 4,
+    },
+    deleteButtonChild: {
+        paddingHorizontal: 6,
+        paddingVertical: 3,
     },
     deleteButtonText: {
         color: '#fff',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    childAddButtonInline: {
-        backgroundColor: '#4CAF50',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 4,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginLeft: 8,
-        marginRight: 8,
-        minWidth: 32,
-        height: 32,
-    },
-    childAddButtonInlineSelected: {
-        backgroundColor: '#2196F3',
-    },
-    childAddButtonInlineText: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    editButton: {
-        backgroundColor: '#FF9800',
-        paddingHorizontal: 12,
-        paddingVertical: 9,
-        borderRadius: 4,
-        marginLeft: 4,
-    },
-    editButtonText: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    draggedItem: {
-        opacity: 0.5,
-        backgroundColor: '#e0e0e0',
-    },
-    dragIndicator: {
-        position: 'absolute',
-        right: 5,
-        top: 5,
-    },
-    dragIndicatorText: {
-        fontSize: 16,
-    },
-    dropZoneBetween: {
-        backgroundColor: '#F0F8FF',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        marginVertical: 4,
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: '#2196F3',
-        borderStyle: 'dashed',
-        alignItems: 'center',
-    },
-    dropZoneFinal: {
-        backgroundColor: '#F0F8FF',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        marginTop: 8,
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: '#2196F3',
-        borderStyle: 'dashed',
-        alignItems: 'center',
-    },
-    dropZoneLabel: {
-        color: '#2196F3',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-    childDropZone: {
-        backgroundColor: '#F0F8FF',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        marginHorizontal: 4,
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: '#2196F3',
-        borderStyle: 'dashed',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    childDropZoneText: {
-        color: '#2196F3',
         fontSize: 10,
         fontWeight: 'bold',
     },
-    counter: {
-        textAlign: 'center',
-        marginBottom: 20,
-        fontSize: 16,
-        color: '#666',
+    deleteButtonTextChild: {
+        fontSize: 9,
+    },
+    // ドラッグハンドル
+    dragHandle: {
+        position: 'absolute',
+        right: 0,
+        top: 0,
+        bottom: 0,
+        width: 32,
+        backgroundColor: '#E0E0E0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderTopRightRadius: 8,
+        borderBottomRightRadius: 8,
+    },
+    dragHandleText: {
+        color: '#757575',
+        fontSize: 14,
+    },
+    // 子タスク
+    childrenContainer: {
+        marginTop: 4,
+        marginLeft: 20,
+        marginRight: 36,
+    },
+    childTaskContainer: {
+        marginTop: 3,
+    },
+    childTaskItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 6,
+        borderLeftWidth: 6,
+        borderLeftColor: '#4CAF50',
+    },
+    // 選択中の親情報
+    selectedParentInfo: {
+        backgroundColor: '#E8F5E8',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 15,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderLeftWidth: 4,
+        borderLeftColor: '#4CAF50',
+    },
+    selectedParentText: {
+        color: '#4CAF50',
+        fontWeight: 'bold',
+        flex: 1,
+    },
+    clearSelectionButton: {
+        backgroundColor: '#FF5722',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 4,
+    },
+    clearSelectionText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
     },
 });
