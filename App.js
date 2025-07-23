@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { Text, View, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { styles } from './src/styles/styles';
+import TaskInput from './src/components/TaskInput';
+import DropZone from './src/components/DropZone';
+import ChildTaskItem from './src/components/ChildTaskItem';
+import ParentTaskItem from './src/components/ParentTaskItem';
 
 export default function App() {
   // 基本状態
@@ -12,6 +17,12 @@ export default function App() {
   const [draggedItem, setDraggedItem] = useState(null);
   const [isChildDrag, setIsChildDrag] = useState(false);
   const [dragParentId, setDragParentId] = useState(null);
+
+  // 編集状態
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState('');
+  const [isEditingChild, setIsEditingChild] = useState(false);
+  const [editingParentId, setEditingParentId] = useState(null);
 
   // 新しいタスクを追加
   const addTask = () => {
@@ -38,6 +49,57 @@ export default function App() {
 
       setInputText('');
     }
+  };
+
+  // 編集モードを開始
+  const startEditing = (taskId, currentText, isChild = false, parentId = null) => {
+    if (isDragging) return; // ドラッグ中は編集不可
+
+    setEditingId(taskId);
+    setEditingText(currentText);
+    setIsEditingChild(isChild);
+    setEditingParentId(parentId);
+  };
+
+  // 編集をキャンセル
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingText('');
+    setIsEditingChild(false);
+    setEditingParentId(null);
+  };
+
+  // 編集を保存
+  const saveEdit = () => {
+    if (editingText.trim() === '') {
+      Alert.alert('エラー', 'アイテム名を入力してください。');
+      return;
+    }
+
+    if (isEditingChild) {
+      // 子タスクの編集
+      setTasks(currentTasks => currentTasks.map(task =>
+        task.id === editingParentId
+          ? {
+            ...task,
+            children: task.children.map(child =>
+              child.id === editingId
+                ? { ...child, text: editingText.trim() }
+                : child
+            )
+          }
+          : task
+      ));
+    } else {
+      // 親タスクの編集
+      setTasks(currentTasks => currentTasks.map(task =>
+        task.id === editingId
+          ? { ...task, text: editingText.trim() }
+          : task
+      ));
+    }
+
+    cancelEditing();
   };
 
   // 親選択モードの切り替え
@@ -86,6 +148,55 @@ export default function App() {
         const newTasks = [...updatedTasks];
         newTasks.splice(targetIndex, 0, childToMove);
         return newTasks;
+      }
+
+      return currentTasks;
+    });
+  };
+
+  // 子アイテム同士の並び替え（同じ親内）
+  const reorderChildrenInParent = (parentId, fromIndex, toIndex) => {
+    setTasks(currentTasks => currentTasks.map(task => {
+      if (task.id === parentId) {
+        const newChildren = [...task.children];
+        const [movedChild] = newChildren.splice(fromIndex, 1);
+        newChildren.splice(toIndex, 0, movedChild);
+        return {
+          ...task,
+          children: newChildren
+        };
+      }
+      return task;
+    }));
+  };
+
+  // 子アイテムを別の親の子として移動
+  const moveChildToAnotherParent = (childId, oldParentId, newParentId) => {
+    setTasks(currentTasks => {
+      let childToMove = null;
+
+      // 子アイテムを元の親から取得・削除
+      const updatedTasks = currentTasks.map(task => {
+        if (task.id === oldParentId) {
+          const child = task.children.find(c => c.id === childId);
+          if (child) {
+            childToMove = { ...child };
+            return {
+              ...task,
+              children: task.children.filter(c => c.id !== childId)
+            };
+          }
+        }
+        return task;
+      });
+
+      // 新しい親に子アイテムを追加
+      if (childToMove) {
+        return updatedTasks.map(task =>
+          task.id === newParentId
+            ? { ...task, children: [...task.children, childToMove] }
+            : task
+        );
       }
 
       return currentTasks;
@@ -164,235 +275,111 @@ export default function App() {
 
   // タスクを削除
   const deleteTask = (taskId, isChild = false, parentId = null) => {
-    Alert.alert(
-      '削除確認',
-      'このアイテムを削除しますか？',
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '削除',
-          style: 'destructive',
-          onPress: () => {
-            if (isChild) {
-              // 子タスクの削除
-              setTasks(currentTasks => currentTasks.map(task =>
-                task.id === parentId
-                  ? {
-                    ...task,
-                    children: task.children.filter(child => child.id !== taskId)
-                  }
-                  : task
-              ));
-            } else {
-              // 親タスクの削除（子タスクも一緒に削除）
-              setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
-              // 削除された親が選択されていた場合、選択を解除
-              if (selectedParentId === taskId) {
-                setSelectedParentId(null);
-              }
-            }
+    if (isChild) {
+      // 子タスクの削除
+      setTasks(currentTasks => currentTasks.map(task =>
+        task.id === parentId
+          ? {
+            ...task,
+            children: task.children.filter(child => child.id !== taskId)
           }
-        }
-      ]
-    );
+          : task
+      ));
+    } else {
+      // 親タスクの削除（子タスクも一緒に削除）
+      setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
+      // 削除された親が選択されていた場合、選択を解除
+      if (selectedParentId === taskId) {
+        setSelectedParentId(null);
+      }
+    }
+
+    // 編集モードを終了
+    if (editingId === taskId) {
+      cancelEditing();
+    }
   };
 
   // ドロップゾーンの表示
   const renderDropZone = (index) => {
-    if (!isDragging) return null;
+    const handleDrop = () => {
+      if (isChildDrag) {
+        // 子アイテムを指定位置に移動
+        moveChildToPosition(draggedItem.id, dragParentId, index);
+      } else {
+        // 親アイテムの順序変更
+        setTasks(currentTasks => {
+          const fromIndex = currentTasks.findIndex(t => t.id === draggedItem.id);
+          const newTasks = [...currentTasks];
+          const [movedItem] = newTasks.splice(fromIndex, 1);
+          newTasks.splice(index, 0, movedItem);
+          return newTasks;
+        });
+      }
+      endDrag();
+    };
 
     return (
-      <TouchableOpacity
-        key={`drop-${index}`}
-        style={styles.dropZoneBetween}
-        onPress={() => {
-          if (isChildDrag) {
-            // 子アイテムを指定位置に移動
-            moveChildToPosition(draggedItem.id, dragParentId, index);
-          } else {
-            // 親アイテムの順序変更
-            setTasks(currentTasks => {
-              const fromIndex = currentTasks.findIndex(t => t.id === draggedItem.id);
-              const newTasks = [...currentTasks];
-              const [movedItem] = newTasks.splice(fromIndex, 1);
-              newTasks.splice(index, 0, movedItem);
-              return newTasks;
-            });
-          }
-          endDrag();
-        }}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.dropZoneLabel}>ここに移動</Text>
-      </TouchableOpacity>
+      <DropZone
+        isDragging={isDragging}
+        index={index}
+        onDrop={handleDrop}
+        type="between"
+      />
     );
   };
 
   // 子タスクの表示
-  const renderChildTask = (child, parentId) => (
-    <View key={child.id} style={styles.childTaskContainer}>
-      <View
-        style={[
-          styles.childTaskItem,
-          isDragging && draggedItem?.id === child.id && styles.draggedItem
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.checkboxContainer}
-          onPress={() => !isDragging && toggleTask(child.id, true, parentId)}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.checkbox, child.completed && styles.checkboxCompleted]}>
-            <Text style={styles.checkboxText}>
-              {child.completed ? '✓' : ''}
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.taskTextContainer}
-          onPress={() => {
-            if (isDragging && !isChildDrag && draggedItem?.id !== child.id) {
-              // 親アイテムを子アイテムとして移動
-              moveParentToChild(draggedItem.id, parentId);
-              endDrag();
-            } else if (!isDragging) {
-              toggleTask(child.id, true, parentId);
-            }
-          }}
-          onLongPress={() => {
-            if (!isDragging) {
-              startDrag(child, true, parentId);
-            }
-          }}
-          delayLongPress={500}
-          activeOpacity={0.7}
-        >
-          <Text style={[
-            styles.taskText,
-            child.completed && styles.taskTextCompleted
-          ]}>
-            {child.text}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => !isDragging && deleteTask(child.id, true, parentId)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.deleteButtonText}>削除</Text>
-        </TouchableOpacity>
-
-        {isDragging && draggedItem?.id === child.id && (
-          <View style={styles.dragIndicator}>
-            <Text style={styles.dragIndicatorText}>📱</Text>
-          </View>
-        )}
-      </View>
-    </View>
+  const renderChildTask = (child, parentId, parentChildren) => (
+    <ChildTaskItem
+      key={child.id}
+      child={child}
+      parentId={parentId}
+      parentChildren={parentChildren}
+      isDragging={isDragging}
+      draggedItem={draggedItem}
+      isChildDrag={isChildDrag}
+      editingId={editingId}
+      editingText={editingText}
+      onEditingTextChange={setEditingText}
+      onToggleTask={toggleTask}
+      onStartEditing={startEditing}
+      onSaveEdit={saveEdit}
+      onCancelEditing={cancelEditing}
+      onStartDrag={startDrag}
+      onDeleteTask={deleteTask}
+      onMoveParentToChild={moveParentToChild}
+      onEndDrag={endDrag}
+      onReorderChildren={reorderChildrenInParent}
+      onMoveChildToAnotherParent={moveChildToAnotherParent}
+    />
   );
 
   // 親タスクの表示
   const renderTask = ({ item, index }) => (
-    <View>
-      {/* 上部のドロップゾーン */}
-      {renderDropZone(index)}
-
-      <View style={[
-        styles.taskContainer,
-        isDragging && draggedItem?.id === item.id && styles.draggedItem
-      ]}>
-        {/* 親タスク */}
-        <View style={[
-          styles.parentTaskItem,
-          selectedParentId === item.id && styles.parentTaskItemSelected
-        ]}>
-          <TouchableOpacity
-            style={styles.checkboxContainer}
-            onPress={() => !isDragging && toggleTask(item.id)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.checkbox, item.completed && styles.checkboxCompleted]}>
-              <Text style={styles.checkboxText}>
-                {item.completed ? '✓' : ''}
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.taskTextContainer}
-            onPress={() => {
-              if (isDragging && !isChildDrag && draggedItem?.id !== item.id) {
-                // 親アイテムを子アイテムとして移動
-                moveParentToChild(draggedItem.id, item.id);
-                endDrag();
-              } else if (!isDragging) {
-                toggleTask(item.id);
-              }
-            }}
-            onLongPress={() => {
-              if (!isDragging) {
-                startDrag(item, false);
-              }
-            }}
-            delayLongPress={500}
-            activeOpacity={0.7}
-          >
-            <Text style={[
-              styles.taskText,
-              item.completed && styles.taskTextCompleted
-            ]}>
-              {item.text}
-            </Text>
-          </TouchableOpacity>
-
-          {/* 子に移動ドロップゾーン */}
-          {isDragging && !isChildDrag && draggedItem?.id !== item.id && (
-            <TouchableOpacity
-              style={styles.childDropZone}
-              onPress={() => {
-                moveParentToChild(draggedItem.id, item.id);
-                endDrag();
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.childDropZoneText}>子に移動</Text>
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={[
-              styles.childAddButtonInline,
-              selectedParentId === item.id && styles.childAddButtonInlineSelected
-            ]}
-            onPress={() => !isDragging && toggleParentSelection(item.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.childAddButtonInlineText}>
-              {selectedParentId === item.id ? '追加完了' : '追加'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => !isDragging && deleteTask(item.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.deleteButtonText}>削除</Text>
-          </TouchableOpacity>
-
-          {isDragging && draggedItem?.id === item.id && (
-            <View style={styles.dragIndicator}>
-              <Text style={styles.dragIndicatorText}>📱</Text>
-            </View>
-          )}
-        </View>
-
-        {/* 子タスク一覧 */}
-        {item.children.map((child) => renderChildTask(child, item.id))}
-      </View>
-    </View>
+    <ParentTaskItem
+      item={item}
+      index={index}
+      selectedParentId={selectedParentId}
+      isDragging={isDragging}
+      draggedItem={draggedItem}
+      isChildDrag={isChildDrag}
+      editingId={editingId}
+      editingText={editingText}
+      onEditingTextChange={setEditingText}
+      onToggleTask={toggleTask}
+      onStartEditing={startEditing}
+      onSaveEdit={saveEdit}
+      onCancelEditing={cancelEditing}
+      onStartDrag={startDrag}
+      onDeleteTask={deleteTask}
+      onMoveParentToChild={moveParentToChild}
+      onEndDrag={endDrag}
+      onToggleParentSelection={toggleParentSelection}
+      onMoveChildToAnotherParent={moveChildToAnotherParent}
+      renderDropZone={renderDropZone}
+      renderChildTask={renderChildTask}
+    />
   );
 
   // 統計情報の計算
@@ -426,6 +413,25 @@ export default function App() {
     return selectedParent ? selectedParent.text : '';
   };
 
+  // 編集中のアイテム名を取得
+  const getEditingItemName = () => {
+    if (!editingId) return '';
+
+    // 親アイテムから検索
+    for (const task of tasks) {
+      if (task.id === editingId) {
+        return task.text;
+      }
+      // 子アイテムから検索
+      for (const child of task.children) {
+        if (child.id === editingId) {
+          return child.text;
+        }
+      }
+    }
+    return '';
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -438,356 +444,47 @@ export default function App() {
         ✅: {stats.completed} / {stats.total}
       </Text>
 
-      {selectedParentId && (
-        <View style={styles.modeIndicator}>
-          <Text style={styles.modeText}>
-            アイテム追加モード: {getSelectedParentName()}
-          </Text>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => setSelectedParentId(null)}
-          >
-            <Text style={styles.cancelModeText}>×</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {isDragging && (
-        <View style={styles.dragModeIndicator}>
-          <Text style={styles.dragModeText}>
-            {isChildDrag
-              ? '子アイテムを移動中 - 点線エリアをタップして移動'
-              : '親アイテムを移動中 - 点線エリア:順序変更 / 子に移動ボタン:子に変更'
-            }
-          </Text>
-          <TouchableOpacity
-            style={styles.cancelDragButton}
-            onPress={endDrag}
-          >
-            <Text style={styles.cancelDragText}>キャンセル</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
       <FlatList
         data={tasks}
         renderItem={renderTask}
         keyExtractor={(item) => item.id}
         style={styles.taskList}
         contentContainerStyle={styles.taskListContent}
-        ListFooterComponent={() => (
-          isDragging ? (
-            <TouchableOpacity
-              style={styles.dropZoneFinal}
-              onPress={() => {
-                if (isChildDrag) {
-                  // 子アイテムを最後に移動
-                  moveChildToPosition(draggedItem.id, dragParentId, tasks.length);
-                } else {
-                  // 親アイテムを最後に移動
-                  setTasks(currentTasks => {
-                    const fromIndex = currentTasks.findIndex(t => t.id === draggedItem.id);
-                    const newTasks = [...currentTasks];
-                    const [movedItem] = newTasks.splice(fromIndex, 1);
-                    newTasks.push(movedItem);
-                    return newTasks;
-                  });
-                }
-                endDrag();
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.dropZoneLabel}>最後に移動</Text>
-            </TouchableOpacity>
-          ) : null
-        )}
+        ListFooterComponent={() => {
+          const handleFinalDrop = () => {
+            if (isChildDrag) {
+              // 子アイテムを最後に移動
+              moveChildToPosition(draggedItem.id, dragParentId, tasks.length);
+            } else {
+              // 親アイテムを最後に移動
+              setTasks(currentTasks => {
+                const fromIndex = currentTasks.findIndex(t => t.id === draggedItem.id);
+                const newTasks = [...currentTasks];
+                const [movedItem] = newTasks.splice(fromIndex, 1);
+                newTasks.push(movedItem);
+                return newTasks;
+              });
+            }
+            endDrag();
+          };
+
+          return (
+            <DropZone
+              isDragging={isDragging}
+              onDrop={handleFinalDrop}
+              type="final"
+            />
+          );
+        }}
       />
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder={selectedParentId ? `「${getSelectedParentName()}」に新しいアイテムを入力...` : "新しいアイテムを入力..."}
-          value={inputText}
-          onChangeText={setInputText}
-          onSubmitEditing={addTask}
-        />
-        <TouchableOpacity style={styles.addButton} onPress={addTask}>
-          <Text style={styles.addButtonText}>
-            追加
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TaskInput
+        inputText={inputText}
+        onChangeText={setInputText}
+        onSubmit={addTask}
+        placeholder={selectedParentId ? `「${getSelectedParentName()}」に新しいアイテムを入力...` : "新しいアイテムを入力..."}
+        disabled={!!editingId}
+      />
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    paddingTop: 50,
-    paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 15,
-    marginTop: 15,
-    color: '#333',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#fff',
-    marginRight: 10,
-    fontSize: 16,
-  },
-  addButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    justifyContent: 'center',
-  },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  modeIndicator: {
-    backgroundColor: '#E8F5E8',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
-  },
-  modeText: {
-    color: '#4CAF50',
-    fontWeight: 'bold',
-    flex: 1,
-  },
-  cancelButton: {
-    backgroundColor: '#FF5722',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cancelModeText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  dragModeIndicator: {
-    backgroundColor: '#FFF3CD',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderLeftWidth: 4,
-    borderLeftColor: '#FFC107',
-  },
-  dragModeText: {
-    color: '#856404',
-    fontWeight: 'bold',
-    flex: 1,
-    fontSize: 12,
-  },
-  cancelDragButton: {
-    backgroundColor: '#DC3545',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 4,
-  },
-  cancelDragText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  taskList: {
-    flex: 1,
-  },
-  taskListContent: {
-    paddingBottom: 20,
-  },
-  taskContainer: {
-    marginBottom: 15,
-  },
-  parentTaskItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    borderLeftWidth: 3,
-    borderLeftColor: '#007AFF',
-  },
-  parentTaskItemSelected: {
-    backgroundColor: '#E8F5E8',
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-  },
-  childTaskContainer: {
-    marginLeft: 20,
-    marginTop: 5,
-  },
-  childTaskItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: '#4CAF50',
-  },
-  checkboxContainer: {
-    padding: 8,
-  },
-  checkbox: {
-    width: 28,
-    height: 28,
-    borderWidth: 2,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxCompleted: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  checkboxText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  taskTextContainer: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  taskText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  taskTextCompleted: {
-    textDecorationLine: 'line-through',
-    color: '#999',
-  },
-  deleteButton: {
-    backgroundColor: '#FF3B30',
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 4,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  childAddButtonInline: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-    marginRight: 8,
-    minWidth: 32,
-    height: 32,
-  },
-  childAddButtonInlineSelected: {
-    backgroundColor: '#2196F3',
-  },
-  childAddButtonInlineText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  draggedItem: {
-    opacity: 0.5,
-    backgroundColor: '#e0e0e0',
-  },
-  dragIndicator: {
-    position: 'absolute',
-    right: 5,
-    top: 5,
-  },
-  dragIndicatorText: {
-    fontSize: 16,
-  },
-  dropZoneBetween: {
-    backgroundColor: '#F0F8FF',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginVertical: 4,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#2196F3',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-  },
-  dropZoneFinal: {
-    backgroundColor: '#F0F8FF',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#2196F3',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-  },
-  dropZoneLabel: {
-    color: '#2196F3',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  childDropZone: {
-    backgroundColor: '#F0F8FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginHorizontal: 4,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#2196F3',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  childDropZoneText: {
-    color: '#2196F3',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  counter: {
-    textAlign: 'center',
-    marginBottom: 20,
-    fontSize: 16,
-    color: '#666',
-  },
-});
