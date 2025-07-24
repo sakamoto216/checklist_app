@@ -332,14 +332,167 @@ export const useTasks = () => {
 
     // 階層昇格（子→親、孫→子）
     const promoteTask = (taskId, currentLevel, parentId = null, grandparentId = null) => {
-        // 実装は複雑になるため、基本版のみ提供
-        console.log('Promote task:', { taskId, currentLevel, parentId, grandparentId });
+        console.log('promoteTask called:', { taskId, currentLevel, parentId, grandparentId });
+
+        setTasks(currentTasks => {
+            if (currentLevel === 1) {
+                // 子タスクを親タスクに昇格
+                console.log('Child to parent promotion');
+                let childToPromote = null;
+                let grandchildrenToPromote = [];
+
+                const updatedTasks = currentTasks.map(task => {
+                    if (task.id === parentId) {
+                        const child = task.children.find(c => c.id === taskId);
+                        if (child) {
+                            childToPromote = { ...child, children: [] }; // 新しい親として子は持たない
+                            // 孫タスクがあれば保存
+                            if (child.children && child.children.length > 0) {
+                                grandchildrenToPromote = child.children.map(gc => ({
+                                    ...gc,
+                                    children: [] // 孫は子を持たない
+                                }));
+                                console.log('Found grandchildren to promote:', grandchildrenToPromote.length);
+                            }
+                        }
+                        return {
+                            ...task,
+                            children: task.children.filter(c => c.id !== taskId)
+                        };
+                    }
+                    return task;
+                });
+
+                if (childToPromote) {
+                    // 昇格した子（新しい親）を追加
+                    const newTasks = [...updatedTasks, childToPromote];
+
+                    // 孫たちを元の親の子として追加
+                    if (grandchildrenToPromote.length > 0) {
+                        return newTasks.map(task => {
+                            if (task.id === parentId) {
+                                console.log('Adding promoted grandchildren as children');
+                                return {
+                                    ...task,
+                                    children: [...task.children, ...grandchildrenToPromote]
+                                };
+                            }
+                            return task;
+                        });
+                    }
+
+                    return newTasks;
+                }
+                return updatedTasks;
+
+            } else if (currentLevel === 2) {
+                // 孫タスクを子タスクに昇格
+                console.log('Grandchild to child promotion');
+                return currentTasks.map(task => {
+                    if (task.id === grandparentId) {
+                        let grandchildToPromote = null;
+
+                        const updatedChildren = task.children.map(child => {
+                            if (child.id === parentId) {
+                                const grandchild = child.children?.find(gc => gc.id === taskId);
+                                if (grandchild) {
+                                    grandchildToPromote = { ...grandchild, children: [] };
+                                    console.log('Found grandchild to promote:', grandchild.text);
+                                }
+                                return {
+                                    ...child,
+                                    children: child.children?.filter(gc => gc.id !== taskId) || []
+                                };
+                            }
+                            return child;
+                        });
+
+                        if (grandchildToPromote) {
+                            console.log('Adding promoted grandchild as new child');
+                            updatedChildren.push(grandchildToPromote);
+                        }
+
+                        return { ...task, children: updatedChildren };
+                    }
+                    return task;
+                });
+            }
+
+            return currentTasks;
+        });
     };
 
     // 階層降格（親→子、子→孫）
-    const demoteTask = (taskId, currentLevel) => {
-        // 実装は複雑になるため、基本版のみ提供
-        console.log('Demote task:', { taskId, currentLevel });
+    const demoteTask = (taskId, currentLevel, parentId = null, grandparentId = null) => {
+        console.log('demoteTask called:', { taskId, currentLevel, parentId, grandparentId });
+
+        setTasks(currentTasks => {
+            if (currentLevel === 0) {
+                // 親タスクを前の親の子タスクに降格
+                const taskIndex = currentTasks.findIndex(task => task.id === taskId);
+                console.log('Parent task index:', taskIndex);
+                if (taskIndex <= 0) return currentTasks; // 最初のタスクは降格不可
+
+                const taskToMove = currentTasks[taskIndex];
+                const targetParent = currentTasks[taskIndex - 1];
+
+                const newTasks = currentTasks.filter(task => task.id !== taskId);
+
+                return newTasks.map(task => {
+                    if (task.id === targetParent.id) {
+                        const demotedTask = {
+                            ...taskToMove,
+                            children: taskToMove.children || [] // 子を保持
+                        };
+                        return {
+                            ...task,
+                            children: [...task.children, demotedTask]
+                        };
+                    }
+                    return task;
+                });
+
+            } else if (currentLevel === 1) {
+                // 子タスクを前の子の孫に降格
+                console.log('Child demotion logic - parentId:', parentId);
+                return currentTasks.map(task => {
+                    if (task.id === parentId) {
+                        const childIndex = task.children.findIndex(child => child.id === taskId);
+                        console.log('Child index:', childIndex, 'Total children:', task.children.length);
+
+                        if (childIndex <= 0) {
+                            console.log('Cannot demote first child or child not found');
+                            return task; // 最初の子は降格不可
+                        }
+
+                        const childToMove = task.children[childIndex];
+                        const targetParentChild = task.children[childIndex - 1];
+
+                        console.log('Moving child:', childToMove.text, 'to parent:', targetParentChild.text);
+
+                        const demotedChild = {
+                            ...childToMove,
+                            children: undefined // 孫は子を持たない
+                        };
+
+                        const updatedChildren = [...task.children];
+                        // 移動する子を削除
+                        updatedChildren.splice(childIndex, 1);
+                        // 前の子の孫として追加
+                        updatedChildren[childIndex - 1] = {
+                            ...targetParentChild,
+                            children: [...(targetParentChild.children || []), demotedChild]
+                        };
+
+                        console.log('Updated children count:', updatedChildren.length);
+                        return { ...task, children: updatedChildren };
+                    }
+                    return task;
+                });
+            }
+
+            return currentTasks;
+        });
     };
 
     return {

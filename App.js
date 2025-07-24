@@ -70,6 +70,16 @@ export default function App() {
     });
   };
 
+  // 昇格ハンドラー（3階層対応）
+  const handlePromoteTask = (taskId, currentLevel, parentId = null, grandparentId = null) => {
+    promoteTask(taskId, currentLevel, parentId, grandparentId);
+  };
+
+  // 降格ハンドラー（3階層対応）
+  const handleDemoteTask = (taskId, currentLevel, parentId = null, grandparentId = null) => {
+    demoteTask(taskId, currentLevel, parentId, grandparentId);
+  };
+
   // タスクアイテムのレンダリング（3階層対応）
   const renderTaskItem = (props) => {
     return (
@@ -85,8 +95,8 @@ export default function App() {
         onToggleTask={toggleTask}
         onDeleteTask={deleteTask}
         onAddChildTask={handleAddChildTask}
-        onDemoteTask={demoteTask}
-        onPromoteTask={promoteTask}
+        onDemoteTask={handleDemoteTask}
+        onPromoteTask={handlePromoteTask}
         onChildDragEnd={handleChildDragEnd}
         level={0} // 親レベル
         parentId={null}

@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+    // メインコンテナ
     container: {
         flex: 1,
         backgroundColor: '#aaaaaa',
@@ -9,6 +10,8 @@ export const styles = StyleSheet.create({
         // 震え防止（translateZ削除）
         backfaceVisibility: 'hidden',
     },
+
+    // 入力エリア
     inputContainer: {
         flexDirection: 'row',
         marginTop: 10,
@@ -37,6 +40,7 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
+
     // 使用方法の説明
     instructionContainer: {
         padding: 8,
@@ -47,6 +51,7 @@ export const styles = StyleSheet.create({
         color: '#555555',
         fontWeight: '500',
     },
+
     // 削除モード表示
     deleteModeIndicator: {
         backgroundColor: 'rgba(255, 87, 34, 0.1)',
@@ -61,6 +66,7 @@ export const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
     },
+
     // 選択モード表示（オレンジアクセント）
     selectedModeIndicator: {
         backgroundColor: 'rgba(218, 123, 57, 0.1)', // シックなオレンジ
@@ -78,7 +84,8 @@ export const styles = StyleSheet.create({
         fontWeight: '600',
         flex: 1,
     },
-    // タスクコンテナ
+
+    // タスクリスト
     taskList: {
         flex: 1,
     },
@@ -98,17 +105,19 @@ export const styles = StyleSheet.create({
     taskContainerDeleteMode: {
         backgroundColor: 'rgba(255, 87, 34, 0.05)',
     },
+
     // 編集コンテナ（追加）
     editContainer: {
         flex: 1,
     },
-    // 親タスク
+
+    // 親タスク（ドラッグハンドル分の余白を統一）
     parentTaskItem: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
         paddingLeft: 10,
-        paddingRight: 40,
+        paddingRight: 40, // 子タスクと統一
         paddingVertical: 6,
         borderLeftWidth: 6,
         borderLeftColor: '#DA7B39', // オレンジアクセント
@@ -123,6 +132,7 @@ export const styles = StyleSheet.create({
         backgroundColor: '#FFF3E0',
         borderLeftColor: '#FF5722',
     },
+
     // 削除モードボタン
     deleteModeButton: {
         width: 28,
@@ -150,6 +160,7 @@ export const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
     },
+
     // チェックボックス
     checkboxContainer: {
         padding: 4,
@@ -187,6 +198,7 @@ export const styles = StyleSheet.create({
     checkboxTextChild: {
         fontSize: 12,
     },
+
     // テキストエリア
     taskTextContainer: {
         flex: 2,
@@ -221,6 +233,7 @@ export const styles = StyleSheet.create({
     taskTextDisabled: {
         opacity: 0.6,
     },
+
     // 編集フィールド
     editInput: {
         borderWidth: 1,
@@ -233,6 +246,7 @@ export const styles = StyleSheet.create({
         fontSize: 12,
         padding: 4,
     },
+
     // ボタン群
     editActions: {
         flexDirection: 'row',
@@ -311,7 +325,8 @@ export const styles = StyleSheet.create({
     deleteButtonTextChild: {
         fontSize: 9,
     },
-    // ドラッグハンドル
+
+    // ドラッグハンドル（親タスク）
     dragHandle: {
         position: 'absolute',
         right: 0,
@@ -326,6 +341,7 @@ export const styles = StyleSheet.create({
         color: '#757575',
         fontSize: 14,
     },
+
     // 子タスク
     childrenContainer: {
         marginLeft: 20,
@@ -344,7 +360,7 @@ export const styles = StyleSheet.create({
         backgroundColor: '#ffffff',
         paddingVertical: 8,
         paddingHorizontal: 12,
-        paddingRight: 36, // ドラッグハンドル用の余白
+        paddingRight: 40, // 親タスクと統一
         borderLeftWidth: 6,
         borderLeftColor: '#DA7B39', // オレンジアクセント
         minHeight: 42,
@@ -357,7 +373,8 @@ export const styles = StyleSheet.create({
         backgroundColor: '#FDF5F1', // 薄いオレンジ背景
         borderLeftColor: '#DA7B39', // オレンジアクセント
     },
-    // 子タスクのドラッグハンドル
+
+    // 子タスクのドラッグハンドル（親と位置合わせ）
     childDragHandle: {
         position: 'absolute',
         right: 0,
@@ -372,34 +389,29 @@ export const styles = StyleSheet.create({
         color: '#757575', // 親と同じグレー系に統一
         fontSize: 12,
     },
-    // styles.js に追加する3階層対応スタイル
 
     // 孫タスクコンテナ
     grandchildrenContainer: {
         marginLeft: 15, // 子タスクより少し小さく
     },
-
     grandchildTaskContainer: {
         marginTop: 2,
     },
-
     grandchildTaskItem: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#f8f8f8', // より薄いグレー
         paddingVertical: 6,
         paddingHorizontal: 10,
-        paddingRight: 32,
+        paddingRight: 40, // 親・子タスクと統一
         borderLeftWidth: 4, // 子タスクより細く
         borderLeftColor: '#FFA726', // 少し異なるオレンジ
         minHeight: 36, // 子タスクより小さく
     },
-
     grandchildTaskItemDeleteMode: {
         backgroundColor: '#FFF9C4',
         borderLeftColor: '#FFB300',
     },
-
     grandchildTaskItemActive: {
         backgroundColor: '#FFF3E0',
         borderLeftColor: '#FFA726',
@@ -410,7 +422,6 @@ export const styles = StyleSheet.create({
         width: 20, // 子タスクより小さく
         height: 20,
     },
-
     checkboxTextGrandchild: {
         fontSize: 11, // 少し小さく
     },
@@ -420,13 +431,11 @@ export const styles = StyleSheet.create({
         flex: 1,
         marginLeft: 8,
     },
-
     taskTextGrandchild: {
         fontSize: 14, // 親:16, 子:15, 孫:14
         color: '#666',
         lineHeight: 18,
     },
-
     taskTextTouchableGrandchild: {
         paddingVertical: 4,
         paddingHorizontal: 6,
@@ -455,71 +464,28 @@ export const styles = StyleSheet.create({
         marginRight: 4,
         borderRadius: 10,
     },
-
     deleteModeButtonTextGrandchild: {
         color: '#fff',
         fontSize: 10,
         fontWeight: 'bold',
     },
 
-    // 孫タスクのドラッグハンドル
+    // 孫タスクのドラッグハンドル（幅を調整）
     grandchildDragHandle: {
         position: 'absolute',
         right: 0,
         top: 0,
         bottom: 0,
-        width: 28, // 親:32, 子:32, 孫:28
+        width: 32, // 親・子と同じ幅に統一
         backgroundColor: '#E0E0E0',
         justifyContent: 'center',
         alignItems: 'center',
     },
-
     grandchildDragHandleText: {
         color: '#757575',
         fontSize: 10, // 少し小さく
     },
 
-    // 階層インジケーター（視覚的区別用）
-    taskLevelIndicator: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 3,
-    },
-
-    parentLevelIndicator: {
-        backgroundColor: '#DA7B39', // オレンジ
-    },
-
-    childLevelIndicator: {
-        backgroundColor: '#FFA726', // 薄いオレンジ
-    },
-
-    grandchildLevelIndicator: {
-        backgroundColor: '#FFD54F', // さらに薄いオレンジ
-    },
-
-    // 階層インジケーター（視覚的区別用）
-    taskLevelIndicator: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 3,
-    },
-
-    parentLevelIndicator: {
-        backgroundColor: '#DA7B39', // オレンジ
-    },
-
-    childLevelIndicator: {
-        backgroundColor: '#FFA726', // 薄いオレンジ
-    },
-
-    grandchildLevelIndicator: {
-        backgroundColor: '#FFD54F', // さらに薄いオレンジ
-    },
     // 右スワイプアクション（親タスク化）
     promoteAction: {
         justifyContent: 'center',
@@ -527,18 +493,19 @@ export const styles = StyleSheet.create({
         width: 50,
         marginTop: 3,
         paddingHorizontal: 10,
+        backgroundColor: '#4CAF50',
     },
     promoteActionText: {
         color: '#fff',
         fontSize: 12,
         fontWeight: 'bold',
-
     },
     promoteActionIcon: {
         fontSize: 20,
         marginTop: 2,
         color: '#fff',
     },
+
     // 左スワイプアクション（子タスク化）
     demoteAction: {
         justifyContent: 'center',
@@ -546,6 +513,7 @@ export const styles = StyleSheet.create({
         width: 50,
         marginBottom: 4,
         paddingHorizontal: 10,
+        backgroundColor: '#2196F3',
     },
     demoteActionText: {
         color: '#fff',
@@ -557,6 +525,7 @@ export const styles = StyleSheet.create({
         marginTop: 2,
         color: '#fff',
     },
+
     // 選択中の親情報
     selectedParentInfo: {
         backgroundColor: '#FDF5F1', // 薄いオレンジ背景
@@ -584,7 +553,25 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 
-    // フラットフッターエリア（位置固定強化版）
+    // 階層インジケーター（視覚的区別用）
+    taskLevelIndicator: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: 3,
+    },
+    parentLevelIndicator: {
+        backgroundColor: '#DA7B39', // オレンジ
+    },
+    childLevelIndicator: {
+        backgroundColor: '#FFA726', // 薄いオレンジ
+    },
+    grandchildLevelIndicator: {
+        backgroundColor: '#FFD54F', // さらに薄いオレンジ
+    },
+
+    // フラットフッターエリア（新デザイン）
     footer: {
         position: 'absolute',
         bottom: 0,
@@ -609,7 +596,6 @@ export const styles = StyleSheet.create({
         backgroundColor: '#DA7B39', // オレンジアクセント
         height: 70, // 明示的に高さ指定
     },
-
     footerAddButtonText: {
         fontSize: 26,
         color: '#fff',
@@ -624,16 +610,13 @@ export const styles = StyleSheet.create({
         backgroundColor: '#fff',
         height: 70, // 明示的に高さ指定
     },
-
     footerDeleteButtonActive: {
         backgroundColor: '#FF5722',
     },
-
     footerDeleteButtonText: {
         fontSize: 24,
         color: '#DA7B39',
     },
-
     footerDeleteButtonTextActive: {
         fontSize: 20,
         color: '#fff',
