@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import DraggableFlatList from 'react-native-draggable-flatlist';
-import { Swipeable } from 'react-native-gesture-handler'; // 修正: 正しいimport
+import { Swipeable } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { styles } from './src/styles/styles';
 import TaskInput from './src/components/TaskInput';
@@ -21,6 +21,60 @@ export default function App() {
   // 削除モード状態
   const [isDeleteMode, setIsDeleteMode] = useState(false);
 
+  // スクロール制御用のref
+  const flatListRef = useRef(null);
+
+  // キーボード表示状態
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // キーボードイベントリスナー
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  // 編集中のアイテムにスクロールする関数
+  const scrollToEditingItem = (taskId, isChild = false, parentId = null) => {
+    if (!flatListRef.current) return;
+
+    // 少し遅延してスクロール（キーボードアニメーション完了後）
+    setTimeout(() => {
+      // プラットフォーム別のviewPosition設定
+      const viewPosition = Platform.OS === 'android' ? 0.15 : 0.3; // Androidはより上の位置に
+
+      if (isChild) {
+        // 子タスクの場合、親タスクのインデックスを探す
+        const parentIndex = tasks.findIndex(task => task.id === parentId);
+        if (parentIndex !== -1) {
+          flatListRef.current?.scrollToIndex({
+            index: parentIndex,
+            animated: true,
+            viewPosition: viewPosition,
+          });
+        }
+      } else {
+        // 親タスクの場合
+        const taskIndex = tasks.findIndex(task => task.id === taskId);
+        if (taskIndex !== -1) {
+          flatListRef.current?.scrollToIndex({
+            index: taskIndex,
+            animated: true,
+            viewPosition: viewPosition,
+          });
+        }
+      }
+    }, Platform.OS === 'android' ? 400 : 300); // Androidは少し長めの遅延
+  };
+
   // 新しいタスクを追加（空の編集状態で）
   const addTask = () => {
     const newTask = {
@@ -31,7 +85,23 @@ export default function App() {
     };
 
     // 親タスクとして追加
-    setTasks(currentTasks => [...currentTasks, newTask]);
+    setTasks(currentTasks => {
+      const newTasks = [...currentTasks, newTask];
+
+      // 新しく追加されたタスクにスクロール
+      setTimeout(() => {
+        if (flatListRef.current) {
+          const viewPosition = Platform.OS === 'android' ? 0.15 : 0.3; // Androidはより上の位置に
+          flatListRef.current.scrollToIndex({
+            index: newTasks.length - 1,
+            animated: true,
+            viewPosition: viewPosition,
+          });
+        }
+      }, Platform.OS === 'android' ? 150 : 100); // Androidは少し長めの遅延
+
+      return newTasks;
+    });
 
     // 親タスクの編集モードを開始
     setEditingId(newTask.id);
@@ -49,6 +119,9 @@ export default function App() {
     setEditingText(currentText);
     setIsEditingChild(isChild);
     setEditingParentId(parentId);
+
+    // 編集中のアイテムにスクロール
+    scrollToEditingItem(taskId, isChild, parentId);
   };
 
   const cancelEditing = () => {
@@ -117,6 +190,9 @@ export default function App() {
     setEditingText('');
     setIsEditingChild(true);
     setEditingParentId(parentId);
+
+    // 親タスクにスクロール
+    scrollToEditingItem(newChildTask.id, true, parentId);
   };
 
   const toggleTask = (taskId, isChild = false, parentId = null) => {
@@ -174,6 +250,14 @@ export default function App() {
     setTasks(data);
   };
 
+  // ドラッグ開始時の処理
+  const handleDragBegin = () => {
+    // ドラッグ開始時に編集モードを解除
+    if (editingId) {
+      cancelEditing();
+    }
+  };
+
   // 子タスクのドラッグ&ドロップ処理
   const handleChildDragEnd = (parentId, newChildrenData) => {
     setTasks(currentTasks => currentTasks.map(task =>
@@ -223,7 +307,15 @@ export default function App() {
       const newTasks = currentTasks.filter(task => task.id !== taskId);
       return newTasks.map(task =>
         task.id === parentTask.id
-          ? { ...task, children: [...task.children, { ...targetTask, children: [] }] }
+          ? {
+            ...task,
+            children: [
+              ...task.children,
+              // 元の子タスクも含めて新しい親の子として追加
+              { ...targetTask, children: [] }, // 対象タスク自体
+              ...targetTask.children // 元の子タスクたち
+            ]
+          }
           : task
       );
     });
@@ -237,7 +329,6 @@ export default function App() {
         onPress={() => promoteChildToParent(childId, parentId)}
         activeOpacity={0.7}
       >
-        <Text style={styles.promoteActionText}>親に</Text>
         <Text style={styles.promoteActionIcon}>↗️</Text>
       </TouchableOpacity>
     );
@@ -251,10 +342,18 @@ export default function App() {
         onPress={() => demoteParentToChild(taskId)}
         activeOpacity={0.7}
       >
-        <Text style={styles.demoteActionText}>子に</Text>
         <Text style={styles.demoteActionIcon}>↙️</Text>
       </TouchableOpacity>
     );
+  };
+
+  // FlatListのscrollToIndexエラーハンドリング
+  const handleScrollToIndexFailed = (info) => {
+    console.log('ScrollToIndex failed:', info);
+    // フォールバック: 最後のアイテムにスクロール
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
   // タスクアイテムのレンダリング
@@ -370,8 +469,8 @@ export default function App() {
             )}
           </View>
 
-          {/* 子タスク一覧 */}
-          {item.children && item.children.length > 0 && !isActive && (
+          {/* 子タスク一覧 - isActiveに関係なく表示・非表示を制御しない */}
+          {item.children && item.children.length > 0 && (
             <View style={styles.childrenContainer}>
               <DraggableFlatList
                 data={item.children}
@@ -480,7 +579,7 @@ export default function App() {
                 activationDistance={10}
                 dragItemOverflow={false}
                 scrollEnabled={false}
-                nestedScrollEnabled={false} // 追加: ネストしたスクロールの問題を防ぐ
+                nestedScrollEnabled={false}
               />
             </View>
           )}
@@ -510,47 +609,71 @@ export default function App() {
             </Text>
           </View>
 
-          {/* DraggableFlatList */}
-          <DraggableFlatList
-            data={tasks}
-            onDragEnd={handleDragEnd}
-            keyExtractor={(item) => item.id}
-            renderItem={renderTaskItem}
-            containerStyle={styles.taskList}
-            contentContainerStyle={styles.taskListContent}
-            activationDistance={10}
-            dragItemOverflow={true}
-            scrollEnabled={!isDeleteMode}
-            showsVerticalScrollIndicator={false}
-          />
+          {/* キーボード対応のコンテナ */}
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 40} // Androidの余白を増加
+          >
+            {/* DraggableFlatList */}
+            <DraggableFlatList
+              ref={flatListRef}
+              data={tasks}
+              onDragEnd={handleDragEnd}
+              onDragBegin={handleDragBegin}
+              keyExtractor={(item) => item.id}
+              renderItem={renderTaskItem}
+              containerStyle={styles.taskList}
+              contentContainerStyle={[
+                styles.taskListContent,
+                {
+                  paddingBottom: Platform.OS === 'android'
+                    ? Math.max(90, keyboardHeight > 0 ? 40 : 90) // Androidはより多くの余白
+                    : Math.max(70, keyboardHeight > 0 ? 20 : 70) // iOSは従来通り
+                }
+              ]}
+              activationDistance={15} // ドラッグ開始の閾値を少し上げる
+              dragItemOverflow={false} // 他のアイテムに重ならないように
+              scrollEnabled={!isDeleteMode}
+              showsVerticalScrollIndicator={false}
+              onScrollToIndexFailed={handleScrollToIndexFailed}
+              getItemLayout={(data, index) => ({
+                length: 60, // 推定アイテム高さ
+                offset: 60 * index,
+                index,
+              })}
+              // パフォーマンス向上のための追加設定
+              removeClippedSubviews={false} // 子タスクの表示バグ防止
+              maintainVisibleContentPosition={null} // レイアウト安定化
+            />
+          </KeyboardAvoidingView>
 
-          {/* フッターエリア */}
+          {/* フラットフッターエリア */}
           <View style={styles.footer}>
-            {/* 追加ボタン */}
-            {!isDeleteMode && (
-              <TouchableOpacity
-                style={styles.footerAddButton}
-                onPress={addTask}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.footerAddButtonText}>+</Text>
-              </TouchableOpacity>
-            )}
+            {/* 追加ボタン（左半分） */}
+            <TouchableOpacity
+              style={styles.footerAddButton}
+              onPress={addTask}
+              activeOpacity={0.8}
+              disabled={isDeleteMode}
+            >
+              <Text style={styles.footerAddButtonText}>+</Text>
+            </TouchableOpacity>
 
-            {/* 削除モード切り替えボタン */}
+            {/* 削除モード切り替えボタン（右半分） */}
             <TouchableOpacity
               style={[
                 styles.footerDeleteButton,
                 isDeleteMode && styles.footerDeleteButtonActive
               ]}
               onPress={toggleDeleteMode}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
               <Text style={[
                 styles.footerDeleteButtonText,
                 isDeleteMode && styles.footerDeleteButtonTextActive
               ]}>
-                {isDeleteMode ? '✓' : '🗑'}
+                🗑
               </Text>
             </TouchableOpacity>
           </View>
