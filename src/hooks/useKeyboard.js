@@ -7,7 +7,7 @@ export const useKeyboard = (flatListRef, tasks) => {
     // キーボードイベントリスナー
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
-            setKeyboardHeight(e.endCoordinates.height);
+            setKeyboardHeight(e.endCoordinates.height + 100);
         });
         const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
             setKeyboardHeight(0);
@@ -24,7 +24,7 @@ export const useKeyboard = (flatListRef, tasks) => {
         if (!flatListRef.current) return;
 
         setTimeout(() => {
-            const viewPosition = Platform.OS === 'android' ? 0.15 : 0.3;
+            const viewPosition = Platform.OS === 'android' ? 0.05 : 0.1;
 
             if (isChild) {
                 const parentIndex = tasks.findIndex(task => task.id === parentId);
@@ -52,7 +52,7 @@ export const useKeyboard = (flatListRef, tasks) => {
     const scrollToNewTask = (taskIndex) => {
         setTimeout(() => {
             if (flatListRef.current) {
-                const viewPosition = Platform.OS === 'android' ? 0.15 : 0.3;
+                const viewPosition = Platform.OS === 'android' ? 0.05 : 0.1;
                 flatListRef.current.scrollToIndex({
                     index: taskIndex,
                     animated: true,

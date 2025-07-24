@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import { styles } from '../styles/styles';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Entypo from '@expo/vector-icons/Entypo';
 
 const TaskItem = ({
     item,
@@ -34,7 +36,7 @@ const TaskItem = ({
                 onPress={() => onPromoteChildToParent(childId, parentId)}
                 activeOpacity={0.7}
             >
-                <Text style={styles.promoteActionIcon}>↗️</Text>
+                <AntDesign style={styles.promoteActionIcon} name="indent-left" />
             </TouchableOpacity>
         );
     };
@@ -47,7 +49,7 @@ const TaskItem = ({
                 onPress={() => onDemoteParentToChild(taskId)}
                 activeOpacity={0.7}
             >
-                <Text style={styles.demoteActionIcon}>↙️</Text>
+                <AntDesign style={styles.promoteActionIcon} name="indent-right" />
             </TouchableOpacity>
         );
     };
@@ -143,7 +145,7 @@ const TaskItem = ({
                                 onPress={() => onToggleParentSelection(item.id)}
                                 activeOpacity={0.7}
                             >
-                                <Text style={styles.selectButtonText}>+</Text>
+                                <Entypo style={styles.selectButtonText} name="add-to-list" />
                             </TouchableOpacity>
                         </View>
                     )}
@@ -155,7 +157,7 @@ const TaskItem = ({
                             onLongPress={drag}
                             delayLongPress={100}
                         >
-                            <Text style={styles.dragHandleText}>⋮⋮</Text>
+                            <Entypo style={styles.childDragHandleText} name="dots-three-vertical" />
                         </TouchableOpacity>
                     )}
                 </View>
@@ -260,7 +262,7 @@ const TaskItem = ({
                                                     onLongPress={childDrag}
                                                     delayLongPress={100}
                                                 >
-                                                    <Text style={styles.childDragHandleText}>⋮⋮</Text>
+                                                    <Entypo style={styles.childDragHandleText} name="dots-three-vertical" />
                                                 </TouchableOpacity>
                                             )}
                                         </View>

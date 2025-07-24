@@ -5,7 +5,7 @@ export const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#aaaaaa',
         paddingTop: 10, // StatusBar分を調整
-        paddingHorizontal: 20,
+        paddingHorizontal: 15,
         // 震え防止（translateZ削除）
         backfaceVisibility: 'hidden',
     },
@@ -39,11 +39,8 @@ export const styles = StyleSheet.create({
     },
     // 使用方法の説明
     instructionContainer: {
-        backgroundColor: 'rgba(136, 136, 136, 0.15)',
         padding: 8,
         marginBottom: 10,
-        borderLeftWidth: 3,
-        borderLeftColor: '#888888',
     },
     instructionText: {
         fontSize: 11,
@@ -89,7 +86,9 @@ export const styles = StyleSheet.create({
         paddingBottom: 70, // フラットフッター分の余白に調整
     },
     taskContainer: {
-        marginBottom: 4,
+        marginBottom: 6,
+        backgroundColor: '#DA7B39',
+        borderRadius: 6,
     },
     taskContainerActive: {
         backgroundColor: 'rgba(218, 123, 57, 0.08)', // オレンジアクセント
@@ -268,7 +267,6 @@ export const styles = StyleSheet.create({
     selectButton: {
         width: 28,
         height: 28,
-        backgroundColor: '#DA7B39', // オレンジアクセント
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 8,
@@ -277,13 +275,13 @@ export const styles = StyleSheet.create({
         backgroundColor: '#B85A1C', // 濃いオレンジ
     },
     selectButtonText: {
-        color: '#fff',
+        color: '#DA7B39',
         fontSize: 16,
         fontWeight: 'bold',
     },
     selectButtonTextSelected: {
         fontSize: 14,
-        color: '#fff',
+        color: '#DA7B39',
     },
     editButton: {
         backgroundColor: '#FF9800',
@@ -343,11 +341,11 @@ export const styles = StyleSheet.create({
     childTaskItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f8f8f8',
+        backgroundColor: '#ffffff',
         paddingVertical: 8,
         paddingHorizontal: 12,
         paddingRight: 36, // ドラッグハンドル用の余白
-        borderLeftWidth: 4,
+        borderLeftWidth: 6,
         borderLeftColor: '#DA7B39', // オレンジアクセント
         minHeight: 42,
     },
@@ -389,8 +387,9 @@ export const styles = StyleSheet.create({
 
     },
     promoteActionIcon: {
-        fontSize: 16,
+        fontSize: 20,
         marginTop: 2,
+        color: '#fff',
     },
     // 左スワイプアクション（子タスク化）
     demoteAction: {
@@ -406,8 +405,9 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     demoteActionIcon: {
-        fontSize: 16,
+        fontSize: 20,
         marginTop: 2,
+        color: '#fff',
     },
     // 選択中の親情報
     selectedParentInfo: {
@@ -441,39 +441,37 @@ export const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 60,
+        height: 70,
         flexDirection: 'row',
         backgroundColor: '#fff',
-        borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
     },
     // フッター追加ボタン（左半分）- オレンジアクセント
     footerAddButton: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'top',
         alignItems: 'center',
         backgroundColor: '#DA7B39', // オレンジアクセント
+        paddingTop: 14,
     },
     footerAddButtonText: {
-        fontSize: 24,
+        fontSize: 26,
         color: '#fff',
         fontWeight: '400',
     },
     // フッター削除ボタン（右半分）
     footerDeleteButton: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'top',
         alignItems: 'center',
         backgroundColor: '#fff',
-        borderLeftWidth: 1,
-        borderLeftColor: '#E0E0E0',
+        paddingTop: 16,
     },
     footerDeleteButtonActive: {
         backgroundColor: '#FF5722',
     },
     footerDeleteButtonText: {
-        fontSize: 20,
-        color: '#666',
+        fontSize: 24,
+        color: '#DA7B39',
     },
     footerDeleteButtonTextActive: {
         fontSize: 20,

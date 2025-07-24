@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { styles } from '../styles/styles';
+import AntDesign from '@expo/vector-icons/AntDesign';
+
 
 const Footer = ({ isDeleteMode, onAddTask, onToggleDeleteMode }) => {
     return (
@@ -12,7 +14,7 @@ const Footer = ({ isDeleteMode, onAddTask, onToggleDeleteMode }) => {
                 activeOpacity={0.8}
                 disabled={isDeleteMode}
             >
-                <Text style={styles.footerAddButtonText}>+</Text>
+                <AntDesign style={styles.footerAddButtonText} name="plus" />
             </TouchableOpacity>
 
             {/* 削除モード切り替えボタン（右半分） */}
@@ -24,12 +26,12 @@ const Footer = ({ isDeleteMode, onAddTask, onToggleDeleteMode }) => {
                 onPress={onToggleDeleteMode}
                 activeOpacity={0.8}
             >
-                <Text style={[
+
+                <AntDesign style={[
                     styles.footerDeleteButtonText,
                     isDeleteMode && styles.footerDeleteButtonTextActive
-                ]}>
-                    🗑
-                </Text>
+                ]}
+                    name="delete" />
             </TouchableOpacity>
         </View>
     );
