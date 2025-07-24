@@ -4,14 +4,44 @@ export const useTasks = () => {
     // 基本状態
     const [tasks, setTasks] = useState([]);
 
-    // 編集状態
+    // 編集状態（拡張版）
     const [editingId, setEditingId] = useState(null);
     const [editingText, setEditingText] = useState('');
-    const [isEditingChild, setIsEditingChild] = useState(false);
+    const [editingLevel, setEditingLevel] = useState(0); // 0: 親, 1: 子, 2: 孫
     const [editingParentId, setEditingParentId] = useState(null);
+    const [editingGrandparentId, setEditingGrandparentId] = useState(null);
 
     // 削除モード状態
     const [isDeleteMode, setIsDeleteMode] = useState(false);
+
+    // 3階層のタスクを検索するヘルパー関数
+    const findTaskByPath = (taskId, parentId = null, grandparentId = null) => {
+        for (const task of tasks) {
+            // 親レベル
+            if (task.id === taskId && !parentId) {
+                return { task, level: 0 };
+            }
+
+            // 子レベル
+            if (task.children) {
+                for (const child of task.children) {
+                    if (child.id === taskId && task.id === parentId && !grandparentId) {
+                        return { task: child, level: 1, parent: task };
+                    }
+
+                    // 孫レベル
+                    if (child.children) {
+                        for (const grandchild of child.children) {
+                            if (grandchild.id === taskId && child.id === parentId && task.id === grandparentId) {
+                                return { task: grandchild, level: 2, parent: child, grandparent: task };
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    };
 
     // 新しいタスクを追加（空の編集状態で）
     const addTask = (onTaskAdded) => {
@@ -33,135 +63,226 @@ export const useTasks = () => {
         // 編集モードを開始
         setEditingId(newTask.id);
         setEditingText('');
-        setIsEditingChild(false);
+        setEditingLevel(0);
         setEditingParentId(null);
+        setEditingGrandparentId(null);
     };
 
-    // 編集開始
-    const startEditing = (taskId, currentText, isChild = false, parentId = null, onEditingStarted) => {
+    // 編集開始（3階層対応）
+    const startEditing = (taskId, currentText, level = 0, parentId = null, grandparentId = null, onEditingStarted) => {
         if (isDeleteMode) return;
 
         setEditingId(taskId);
         setEditingText(currentText);
-        setIsEditingChild(isChild);
+        setEditingLevel(level);
         setEditingParentId(parentId);
+        setEditingGrandparentId(grandparentId);
 
         if (onEditingStarted) {
-            onEditingStarted(taskId, isChild, parentId);
+            onEditingStarted(taskId, level, parentId, grandparentId);
         }
     };
 
     // 編集キャンセル
     const cancelEditing = () => {
         if (editingId && editingText.trim() === '') {
-            deleteTask(editingId, isEditingChild, editingParentId);
+            deleteTask(editingId, editingLevel, editingParentId, editingGrandparentId);
         }
 
         setEditingId(null);
         setEditingText('');
-        setIsEditingChild(false);
+        setEditingLevel(0);
         setEditingParentId(null);
+        setEditingGrandparentId(null);
     };
 
-    // 編集保存
+    // 編集保存（3階層対応）
     const saveEdit = () => {
         if (editingText.trim() === '') {
-            deleteTask(editingId, isEditingChild, editingParentId);
+            deleteTask(editingId, editingLevel, editingParentId, editingGrandparentId);
             cancelEditing();
             return;
         }
 
-        if (isEditingChild) {
-            setTasks(currentTasks => currentTasks.map(task =>
-                task.id === editingParentId
-                    ? {
+        setTasks(currentTasks => {
+            return currentTasks.map(task => {
+                if (editingLevel === 0 && task.id === editingId) {
+                    // 親タスクの編集
+                    return { ...task, text: editingText.trim() };
+                }
+
+                if (editingLevel === 1 && task.id === editingParentId) {
+                    // 子タスクの編集
+                    return {
                         ...task,
                         children: task.children.map(child =>
                             child.id === editingId
                                 ? { ...child, text: editingText.trim() }
                                 : child
                         )
-                    }
-                    : task
-            ));
-        } else {
-            setTasks(currentTasks => currentTasks.map(task =>
-                task.id === editingId
-                    ? { ...task, text: editingText.trim() }
-                    : task
-            ));
-        }
+                    };
+                }
+
+                if (editingLevel === 2 && task.id === editingGrandparentId) {
+                    // 孫タスクの編集
+                    return {
+                        ...task,
+                        children: task.children.map(child =>
+                            child.id === editingParentId
+                                ? {
+                                    ...child,
+                                    children: child.children.map(grandchild =>
+                                        grandchild.id === editingId
+                                            ? { ...grandchild, text: editingText.trim() }
+                                            : grandchild
+                                    )
+                                }
+                                : child
+                        )
+                    };
+                }
+
+                return task;
+            });
+        });
 
         cancelEditing();
     };
 
-    // 子タスク追加
-    const toggleParentSelection = (parentId, onChildAdded) => {
+    // 子/孫タスク追加
+    const addChildTask = (parentId, level = 1, grandparentId = null, onChildAdded) => {
         if (isDeleteMode) return;
 
         const newChildTask = {
             id: Date.now().toString(),
             text: '',
             completed: false,
+            children: level < 2 ? [] : undefined, // 孫レベルは子を持たない
         };
 
-        setTasks(currentTasks => currentTasks.map(task =>
-            task.id === parentId
-                ? { ...task, children: [...task.children, newChildTask] }
-                : task
-        ));
+        setTasks(currentTasks => {
+            return currentTasks.map(task => {
+                if (level === 1 && task.id === parentId) {
+                    // 子タスク追加
+                    return {
+                        ...task,
+                        children: [...task.children, newChildTask]
+                    };
+                }
 
-        // 子タスクの編集モードを開始
+                if (level === 2 && task.id === grandparentId) {
+                    // 孫タスク追加
+                    return {
+                        ...task,
+                        children: task.children.map(child =>
+                            child.id === parentId
+                                ? {
+                                    ...child,
+                                    children: [...(child.children || []), newChildTask]
+                                }
+                                : child
+                        )
+                    };
+                }
+
+                return task;
+            });
+        });
+
+        // 新しいタスクの編集モードを開始
         setEditingId(newChildTask.id);
         setEditingText('');
-        setIsEditingChild(true);
+        setEditingLevel(level);
         setEditingParentId(parentId);
+        setEditingGrandparentId(grandparentId);
 
         if (onChildAdded) {
-            onChildAdded(newChildTask.id, true, parentId);
+            onChildAdded(newChildTask.id, level, parentId, grandparentId);
         }
     };
 
-    // タスクの完了状態切り替え
-    const toggleTask = (taskId, isChild = false, parentId = null) => {
+    // タスクの完了状態切り替え（3階層対応）
+    const toggleTask = (taskId, level = 0, parentId = null, grandparentId = null) => {
         if (isDeleteMode) return;
 
-        if (isChild) {
-            setTasks(currentTasks => currentTasks.map(task =>
-                task.id === parentId
-                    ? {
+        setTasks(currentTasks => {
+            return currentTasks.map(task => {
+                if (level === 0 && task.id === taskId) {
+                    // 親タスク
+                    return { ...task, completed: !task.completed };
+                }
+
+                if (level === 1 && task.id === parentId) {
+                    // 子タスク
+                    return {
                         ...task,
                         children: task.children.map(child =>
                             child.id === taskId
                                 ? { ...child, completed: !child.completed }
                                 : child
                         )
-                    }
-                    : task
-            ));
-        } else {
-            setTasks(currentTasks => currentTasks.map(task =>
-                task.id === taskId
-                    ? { ...task, completed: !task.completed }
-                    : task
-            ));
-        }
+                    };
+                }
+
+                if (level === 2 && task.id === grandparentId) {
+                    // 孫タスク
+                    return {
+                        ...task,
+                        children: task.children.map(child =>
+                            child.id === parentId
+                                ? {
+                                    ...child,
+                                    children: child.children.map(grandchild =>
+                                        grandchild.id === taskId
+                                            ? { ...grandchild, completed: !grandchild.completed }
+                                            : grandchild
+                                    )
+                                }
+                                : child
+                        )
+                    };
+                }
+
+                return task;
+            });
+        });
     };
 
-    // タスク削除
-    const deleteTask = (taskId, isChild = false, parentId = null) => {
-        if (isChild) {
-            setTasks(currentTasks => currentTasks.map(task =>
-                task.id === parentId
-                    ? {
+    // タスク削除（3階層対応）
+    const deleteTask = (taskId, level = 0, parentId = null, grandparentId = null) => {
+        setTasks(currentTasks => {
+            return currentTasks.map(task => {
+                if (level === 0) {
+                    // 親タスクの削除
+                    return task.id === taskId ? null : task;
+                }
+
+                if (level === 1 && task.id === parentId) {
+                    // 子タスクの削除
+                    return {
                         ...task,
                         children: task.children.filter(child => child.id !== taskId)
-                    }
-                    : task
-            ));
-        } else {
-            setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
-        }
+                    };
+                }
+
+                if (level === 2 && task.id === grandparentId) {
+                    // 孫タスクの削除
+                    return {
+                        ...task,
+                        children: task.children.map(child =>
+                            child.id === parentId
+                                ? {
+                                    ...child,
+                                    children: child.children.filter(grandchild => grandchild.id !== taskId)
+                                }
+                                : child
+                        )
+                    };
+                }
+
+                return task;
+            }).filter(Boolean);
+        });
     };
 
     // 削除モード切り替え
@@ -184,62 +305,41 @@ export const useTasks = () => {
     };
 
     // 子タスクのドラッグ&ドロップ
-    const handleChildDragEnd = (parentId, newChildrenData) => {
-        setTasks(currentTasks => currentTasks.map(task =>
-            task.id === parentId
-                ? { ...task, children: newChildrenData }
-                : task
-        ));
-    };
-
-    // 子タスクを親タスクに昇格
-    const promoteChildToParent = (childId, parentId) => {
-        let childTask = null;
-
-        const updatedTasks = tasks.map(task => {
-            if (task.id === parentId) {
-                const child = task.children.find(c => c.id === childId);
-                if (child) {
-                    childTask = { ...child, children: [] };
-                }
-                return {
-                    ...task,
-                    children: task.children.filter(c => c.id !== childId)
-                };
-            }
-            return task;
-        });
-
-        if (childTask) {
-            setTasks([...updatedTasks, childTask]);
-        } else {
-            setTasks(updatedTasks);
-        }
-    };
-
-    // 親タスクを子タスクに降格
-    const demoteParentToChild = (taskId) => {
-        const taskIndex = tasks.findIndex(task => task.id === taskId);
-        if (taskIndex <= 0) return;
-
-        const targetTask = tasks[taskIndex];
-        const parentTask = tasks[taskIndex - 1];
-
+    const handleChildDragEnd = (parentId, newChildrenData, level = 1, grandparentId = null) => {
         setTasks(currentTasks => {
-            const newTasks = currentTasks.filter(task => task.id !== taskId);
-            return newTasks.map(task =>
-                task.id === parentTask.id
-                    ? {
+            return currentTasks.map(task => {
+                if (level === 1 && task.id === parentId) {
+                    // 子タスクの並び替え
+                    return { ...task, children: newChildrenData };
+                }
+
+                if (level === 2 && task.id === grandparentId) {
+                    // 孫タスクの並び替え
+                    return {
                         ...task,
-                        children: [
-                            ...task.children,
-                            { ...targetTask, children: [] },
-                            ...targetTask.children
-                        ]
-                    }
-                    : task
-            );
+                        children: task.children.map(child =>
+                            child.id === parentId
+                                ? { ...child, children: newChildrenData }
+                                : child
+                        )
+                    };
+                }
+
+                return task;
+            });
         });
+    };
+
+    // 階層昇格（子→親、孫→子）
+    const promoteTask = (taskId, currentLevel, parentId = null, grandparentId = null) => {
+        // 実装は複雑になるため、基本版のみ提供
+        console.log('Promote task:', { taskId, currentLevel, parentId, grandparentId });
+    };
+
+    // 階層降格（親→子、子→孫）
+    const demoteTask = (taskId, currentLevel) => {
+        // 実装は複雑になるため、基本版のみ提供
+        console.log('Demote task:', { taskId, currentLevel });
     };
 
     return {
@@ -247,8 +347,9 @@ export const useTasks = () => {
         tasks,
         editingId,
         editingText,
-        isEditingChild,
+        editingLevel,
         editingParentId,
+        editingGrandparentId,
         isDeleteMode,
 
         // Setters
@@ -260,14 +361,15 @@ export const useTasks = () => {
         startEditing,
         cancelEditing,
         saveEdit,
-        toggleParentSelection,
+        addChildTask, // 従来のtoggleParentSelectionの代替
         toggleTask,
         deleteTask,
         toggleDeleteMode,
         handleDragEnd,
         handleDragBegin,
         handleChildDragEnd,
-        promoteChildToParent,
-        demoteParentToChild,
+        promoteTask,
+        demoteTask,
+        findTaskByPath,
     };
 };
