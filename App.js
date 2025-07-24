@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { StatusBar } from 'expo-status-bar';
@@ -484,75 +485,64 @@ export default function App() {
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="light" />
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <Text style={styles.title}>持ち物チェックリスト</Text>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar style="light" translucent={false} />
+        <View style={styles.container}>
+          {/* 削除モード表示 */}
+          {isDeleteMode && (
+            <View style={styles.deleteModeIndicator}>
+              <Text style={styles.deleteModeText}>
+                🗑️ 削除モード - 削除したい項目の「✕」をタップ
+              </Text>
+            </View>
+          )}
 
-        {/* 削除モード表示 */}
-        {isDeleteMode && (
-          <View style={styles.deleteModeIndicator}>
-            <Text style={styles.deleteModeText}>
-              🗑️ 削除モード - 削除したい項目の「✕」をタップ
-            </Text>
+          {/* DraggableFlatList */}
+          <DraggableFlatList
+            data={tasks}
+            onDragEnd={handleDragEnd}
+            keyExtractor={(item) => item.id}
+            renderItem={renderTaskItem}
+            containerStyle={styles.taskList}
+            contentContainerStyle={styles.taskListContent}
+            activationDistance={10}
+            dragItemOverflow={true}
+            scrollEnabled={!isDeleteMode}
+          />
+
+          {/* フッターエリア */}
+          <View style={styles.footer}>
+            {/* 追加ボタン */}
+            {!isDeleteMode && (
+              <TouchableOpacity
+                style={styles.footerAddButton}
+                onPress={addTask}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.footerAddButtonText}>+</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* 削除モード切り替えボタン */}
+            <TouchableOpacity
+              style={[
+                styles.footerDeleteButton,
+                isDeleteMode && styles.footerDeleteButtonActive
+              ]}
+              onPress={toggleDeleteMode}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.footerDeleteButtonText,
+                isDeleteMode && styles.footerDeleteButtonTextActive
+              ]}>
+                {isDeleteMode ? '✓' : '🗑'}
+              </Text>
+            </TouchableOpacity>
           </View>
-        )}
-
-        {/* 使用方法の説明 */}
-        {!isDeleteMode && (
-          <View style={styles.instructionContainer}>
-            <Text style={styles.instructionText}>
-              💡 右下の「+」で新規追加 / 項目の「+」で子追加 / 「⋮⋮」長押しで並び替え / 子タスクを右スワイプで親化 / 親タスクを左スワイプで子化
-            </Text>
-          </View>
-        )}
-
-        {/* DraggableFlatList */}
-        <DraggableFlatList
-          data={tasks}
-          onDragEnd={handleDragEnd}
-          keyExtractor={(item) => item.id}
-          renderItem={renderTaskItem}
-          containerStyle={styles.taskList}
-          contentContainerStyle={styles.taskListContent}
-          activationDistance={10}
-          dragItemOverflow={true}
-          // 削除モード時はドラッグ無効
-          scrollEnabled={!isDeleteMode}
-        />
-
-        {/* フローティングボタン群 */}
-        {/* 追加ボタン */}
-        {!isDeleteMode && (
-          <TouchableOpacity
-            style={styles.floatingAddButton}
-            onPress={addTask}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.floatingAddButtonText}>+</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* 削除モード切り替えボタン */}
-        <TouchableOpacity
-          style={[
-            styles.floatingDeleteButton,
-            isDeleteMode && styles.floatingDeleteButtonActive
-          ]}
-          onPress={toggleDeleteMode}
-          activeOpacity={0.7}
-        >
-          <Text style={[
-            styles.floatingDeleteButtonText,
-            isDeleteMode && styles.floatingDeleteButtonTextActive
-          ]}>
-            {isDeleteMode ? '✓' : '🗑'}
-          </Text>
-        </TouchableOpacity>
-      </KeyboardAvoidingView>
-    </GestureHandlerRootView>
+        </View>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }

@@ -4,16 +4,10 @@ export const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#aaaaaa',
-        paddingTop: 50,
+        paddingTop: 60, // StatusBar分を削減
         paddingHorizontal: 20,
-    },
-    title: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 15,
-        marginTop: 15,
-        color: '#fff',
+        // 震え防止（translateZ削除）
+        backfaceVisibility: 'hidden',
     },
     inputContainer: {
         flexDirection: 'row',
@@ -79,7 +73,7 @@ export const styles = StyleSheet.create({
         flex: 1,
     },
     taskListContent: {
-        paddingBottom: 20, // フッターの高さ分余白を削除
+        paddingBottom: 100, // フッターエリア分の余白
     },
     taskContainer: {
         marginBottom: 4,
@@ -105,7 +99,7 @@ export const styles = StyleSheet.create({
         backgroundColor: '#fff',
         paddingLeft: 10,
         paddingRight: 40,
-        paddingVertical: 8,
+        paddingVertical: 6,
         borderRadius: 8,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
@@ -179,8 +173,8 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
     },
     checkboxChild: {
-        width: 20,
-        height: 20,
+        width: 24,
+        height: 24,
     },
     checkboxCompleted: {
         backgroundColor: '#007AFF',
@@ -200,12 +194,12 @@ export const styles = StyleSheet.create({
     // テキストエリア
     taskTextContainer: {
         flex: 2,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 8,
     },
     taskTextContainerChild: {
         paddingHorizontal: 8,
-        paddingVertical: 2,
+        paddingVertical: 8,
     },
     taskTextTouchable: {
         flex: 1,
@@ -236,7 +230,7 @@ export const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#2196F3',
         borderRadius: 4,
-        padding: 6,
+        padding: 5,
         backgroundColor: '#fff',
         fontSize: 14,
     },
@@ -400,7 +394,7 @@ export const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
-        width: 28,
+        width: 32,
         backgroundColor: '#E8F5E8',
         justifyContent: 'center',
         alignItems: 'center',
@@ -479,12 +473,26 @@ export const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
     },
-    // フローティングボタン群
-    // 追加ボタン（+）
-    floatingAddButton: {
+    // フッターエリア
+    footer: {
         position: 'absolute',
-        bottom: 100, // 削除ボタンの上に配置
-        right: 30,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#aaaaaa',
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+        paddingBottom: 25, // SafeArea対応
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255, 255, 255, 0.2)',
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        // 震え防止（translateZ削除）
+        backfaceVisibility: 'hidden',
+    },
+    // フッター追加ボタン
+    footerAddButton: {
         width: 56,
         height: 56,
         borderRadius: 28,
@@ -496,18 +504,16 @@ export const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 8,
+        // 震え防止（translateZ削除）
+        backfaceVisibility: 'hidden',
     },
-    floatingAddButtonText: {
+    footerAddButtonText: {
         fontSize: 28,
         color: '#fff',
         fontWeight: '300',
     },
-
-    // 削除ボタン（🗑）
-    floatingDeleteButton: {
-        position: 'absolute',
-        bottom: 30,
-        right: 30,
+    // フッター削除ボタン
+    footerDeleteButton: {
         width: 56,
         height: 56,
         borderRadius: 28,
@@ -521,17 +527,19 @@ export const styles = StyleSheet.create({
         elevation: 8,
         borderWidth: 1,
         borderColor: '#E0E0E0',
+        // 震え防止（translateZ削除）
+        backfaceVisibility: 'hidden',
     },
-    floatingDeleteButtonActive: {
+    footerDeleteButtonActive: {
         backgroundColor: '#fff',
         shadowColor: '#4CAF50',
         borderColor: '#4CAF50',
     },
-    floatingDeleteButtonText: {
+    footerDeleteButtonText: {
         fontSize: 20,
         color: '#FF5722',
     },
-    floatingDeleteButtonTextActive: {
+    footerDeleteButtonTextActive: {
         fontSize: 24,
         color: '#4CAF50',
     },
