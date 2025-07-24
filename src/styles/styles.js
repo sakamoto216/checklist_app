@@ -4,7 +4,7 @@ export const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#aaaaaa',
-        paddingTop: 60, // StatusBar分を削減
+        paddingTop: 10, // StatusBar分を調整
         paddingHorizontal: 20,
         // 震え防止（translateZ削除）
         backfaceVisibility: 'hidden',
@@ -68,6 +68,24 @@ export const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
     },
+    // 選択モード表示（追加）
+    selectedModeIndicator: {
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        padding: 10,
+        marginBottom: 10,
+        borderRadius: 6,
+        borderLeftWidth: 3,
+        borderLeftColor: '#4CAF50',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    selectedModeText: {
+        fontSize: 12,
+        color: '#2E7D32',
+        fontWeight: '600',
+        flex: 1,
+    },
     // タスクコンテナ
     taskList: {
         flex: 1,
@@ -91,6 +109,10 @@ export const styles = StyleSheet.create({
     },
     taskContainerDeleteMode: {
         backgroundColor: 'rgba(255, 87, 34, 0.05)',
+    },
+    // 編集コンテナ（追加）
+    editContainer: {
+        flex: 1,
     },
     // 親タスク
     parentTaskItem: {

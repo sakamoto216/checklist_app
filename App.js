@@ -3,7 +3,7 @@ import { Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import DraggableFlatList from 'react-native-draggable-flatlist';
-import Swipeable from 'react-native-gesture-handler/Swipeable';
+import { Swipeable } from 'react-native-gesture-handler'; // 修正: 正しいimport
 import { StatusBar } from 'expo-status-bar';
 import { styles } from './src/styles/styles';
 import TaskInput from './src/components/TaskInput';
@@ -104,7 +104,6 @@ export default function App() {
       id: Date.now().toString(),
       text: '',
       completed: false,
-      children: [],
     };
 
     setTasks(currentTasks => currentTasks.map(task =>
@@ -189,25 +188,25 @@ export default function App() {
     let childTask = null;
 
     // 子タスクを取得して親から削除
-    setTasks(currentTasks => {
-      return currentTasks.map(task => {
-        if (task.id === parentId) {
-          const child = task.children.find(c => c.id === childId);
-          if (child) {
-            childTask = { ...child, children: [] }; // 子タスクの子は引き継がない
-          }
-          return {
-            ...task,
-            children: task.children.filter(c => c.id !== childId)
-          };
+    const updatedTasks = tasks.map(task => {
+      if (task.id === parentId) {
+        const child = task.children.find(c => c.id === childId);
+        if (child) {
+          childTask = { ...child, children: [] }; // 子タスクの子は引き継がない
         }
-        return task;
-      });
+        return {
+          ...task,
+          children: task.children.filter(c => c.id !== childId)
+        };
+      }
+      return task;
     });
 
     // 子タスクを親タスクとして追加
     if (childTask) {
-      setTasks(currentTasks => [...currentTasks, childTask]);
+      setTasks([...updatedTasks, childTask]);
+    } else {
+      setTasks(updatedTasks);
     }
   };
 
@@ -230,29 +229,37 @@ export default function App() {
     });
   };
 
-  // 右スワイプアクション（親タスク化） - 表示のみ
+  // 右スワイプアクション（親タスク化）
   const renderRightAction = (childId, parentId) => {
     return (
-      <View style={styles.promoteAction}>
+      <TouchableOpacity
+        style={styles.promoteAction}
+        onPress={() => promoteChildToParent(childId, parentId)}
+        activeOpacity={0.7}
+      >
         <Text style={styles.promoteActionText}>親に</Text>
         <Text style={styles.promoteActionIcon}>↗️</Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 
-  // 左スワイプアクション（子タスク化） - 表示のみ
-  const renderLeftAction = () => {
+  // 左スワイプアクション（子タスク化）
+  const renderLeftAction = (taskId) => {
     return (
-      <View style={styles.demoteAction}>
+      <TouchableOpacity
+        style={styles.demoteAction}
+        onPress={() => demoteParentToChild(taskId)}
+        activeOpacity={0.7}
+      >
         <Text style={styles.demoteActionText}>子に</Text>
         <Text style={styles.demoteActionIcon}>↙️</Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 
   // タスクアイテムのレンダリング
   const renderTaskItem = ({ item, drag, isActive, getIndex }) => {
-    const index = getIndex();
+    const index = getIndex ? getIndex() : 0; // getIndexがundefinedの場合のフォールバック
     const canDemote = index > 0; // 最初のタスク以外は子タスク化可能
 
     return (
@@ -262,7 +269,7 @@ export default function App() {
             demoteParentToChild(item.id);
           }
         }}
-        renderLeftActions={canDemote ? renderLeftAction : null}
+        renderLeftActions={canDemote ? () => renderLeftAction(item.id) : null}
         enabled={!isDeleteMode && editingId !== item.id && canDemote}
         leftThreshold={40}
       >
@@ -315,6 +322,7 @@ export default function App() {
                   onSubmitEditing={saveEdit}
                   onBlur={cancelEditing}
                   autoFocus
+                  placeholder="タスク名を入力..."
                 />
               ) : (
                 <TouchableOpacity
@@ -331,7 +339,7 @@ export default function App() {
                     item.completed && styles.taskTextCompleted,
                     isDeleteMode && styles.taskTextDisabled
                   ]}>
-                    {item.text}
+                    {item.text || '未入力のタスク'}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -376,12 +384,7 @@ export default function App() {
                         promoteChildToParent(child.id, item.id);
                       }
                     }}
-                    renderRightActions={() => (
-                      <View style={styles.promoteAction}>
-                        <Text style={styles.promoteActionText}>親に</Text>
-                        <Text style={styles.promoteActionIcon}>↗️</Text>
-                      </View>
-                    )}
+                    renderRightActions={() => renderRightAction(child.id, item.id)}
                     enabled={!isDeleteMode && editingId !== child.id}
                     rightThreshold={40}
                   >
@@ -435,6 +438,7 @@ export default function App() {
                               onSubmitEditing={saveEdit}
                               onBlur={cancelEditing}
                               autoFocus
+                              placeholder="子タスク名を入力..."
                             />
                           ) : (
                             <TouchableOpacity
@@ -453,7 +457,7 @@ export default function App() {
                                 child.completed && styles.taskTextCompleted,
                                 isDeleteMode && styles.taskTextDisabled
                               ]}>
-                                {child.text}
+                                {child.text || '未入力の子タスク'}
                               </Text>
                             </TouchableOpacity>
                           )}
@@ -476,6 +480,7 @@ export default function App() {
                 activationDistance={10}
                 dragItemOverflow={false}
                 scrollEnabled={false}
+                nestedScrollEnabled={false} // 追加: ネストしたスクロールの問題を防ぐ
               />
             </View>
           )}
@@ -488,7 +493,7 @@ export default function App() {
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar style="light" translucent={false} />
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
           {/* 削除モード表示 */}
           {isDeleteMode && (
             <View style={styles.deleteModeIndicator}>
@@ -497,6 +502,13 @@ export default function App() {
               </Text>
             </View>
           )}
+
+          {/* 使用方法の説明 */}
+          <View style={styles.instructionContainer}>
+            <Text style={styles.instructionText}>
+              • タスクをタップして編集 • +ボタンで子タスク追加 • 長押しで並び替え • スワイプで親子関係変更
+            </Text>
+          </View>
 
           {/* DraggableFlatList */}
           <DraggableFlatList
@@ -509,6 +521,7 @@ export default function App() {
             activationDistance={10}
             dragItemOverflow={true}
             scrollEnabled={!isDeleteMode}
+            showsVerticalScrollIndicator={false}
           />
 
           {/* フッターエリア */}
@@ -541,7 +554,7 @@ export default function App() {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SafeAreaView>
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );
