@@ -196,7 +196,7 @@ export const styles = StyleSheet.create({
         fontSize: 14,
     },
     checkboxTextChild: {
-        fontSize: 12,
+        fontSize: 14,
     },
 
     // テキストエリア
@@ -392,7 +392,7 @@ export const styles = StyleSheet.create({
 
     // 孫タスクコンテナ
     grandchildrenContainer: {
-        marginLeft: 15, // 子タスクより少し小さく
+        marginLeft: 20, // 子タスクより少し小さく
     },
     grandchildTaskContainer: {
         marginTop: 2,
@@ -400,13 +400,13 @@ export const styles = StyleSheet.create({
     grandchildTaskItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f8f8f8', // より薄いグレー
-        paddingVertical: 6,
-        paddingHorizontal: 10,
-        paddingRight: 40, // 親・子タスクと統一
-        borderLeftWidth: 4, // 子タスクより細く
-        borderLeftColor: '#FFA726', // 少し異なるオレンジ
-        minHeight: 36, // 子タスクより小さく
+        backgroundColor: '#ffffff',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        paddingRight: 40, // 親タスクと統一
+        borderLeftWidth: 6,
+        borderLeftColor: '#DA7B39', // オレンジアクセント
+        minHeight: 42,
     },
     grandchildTaskItemDeleteMode: {
         backgroundColor: '#FFF9C4',
@@ -476,14 +476,14 @@ export const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
-        width: 32, // 親・子と同じ幅に統一
-        backgroundColor: '#E0E0E0',
+        width: 32,
+        backgroundColor: '#E0E0E0', // 親と同じグレー系に統一
         justifyContent: 'center',
         alignItems: 'center',
     },
     grandchildDragHandleText: {
         color: '#757575',
-        fontSize: 10, // 少し小さく
+        fontSize: 12, // 少し小さく
     },
 
     // 右スワイプアクション（親タスク化）
