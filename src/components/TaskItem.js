@@ -31,28 +31,23 @@ const TaskItem = ({
     const index = getIndex ? getIndex() : 0;
     const canDemote = index > 0 && level < 2; // 孫レベルは降格不可
     const canPromote = level > 0; // 親レベルは昇格不可
-    const canAddChild = level < 2; // 孫レベルは子を持てない（実際には孫は+ボタンを表示しない）
+    const canAddChild = level < 2; // 孫レベルは子を持てない
 
     // 右スワイプアクション（昇格）
     const renderRightAction = (taskId, currentLevel, parentId, grandparentId) => {
         return (
             <TouchableOpacity
                 style={styles.promoteAction}
-                onPress={() => {
-                    console.log(`Right action pressed: taskId=${taskId}, level=${currentLevel}`);
-                    onPromoteTask(taskId, currentLevel, parentId, grandparentId);
-                }}
+                onPress={() => onPromoteTask(taskId, currentLevel, parentId, grandparentId)}
                 activeOpacity={0.7}
             >
-                <AntDesign style={styles.promoteActionIcon} name="arrow-up" />
+                <AntDesign style={styles.promoteActionIcon} name="indent-left" />
             </TouchableOpacity>
         );
     };
 
     // 左スワイプアクション（降格）
     const renderLeftAction = (taskId, currentLevel) => {
-        if (!canDemote) return null;
-
         return (
             <TouchableOpacity
                 style={styles.demoteAction}
@@ -75,29 +70,20 @@ const TaskItem = ({
         const canPromote = childLevel > 0; // 子・孫は昇格可能
         const canDemote = childLevel === 1 && childIndex > 0; // 子の場合、先頭以外は降格可能
 
-        console.log(`Child ${child.text}: level=${childLevel}, index=${childIndex}, canPromote=${canPromote}, canDemote=${canDemote}`);
-
         return (
             <Swipeable
                 onSwipeableOpen={(direction) => {
-                    console.log(`Swipe ${direction} on child ${child.text}, level=${childLevel}, index=${childIndex}`);
                     if (direction === 'right' && canPromote) {
-                        // 右スワイプで昇格
-                        console.log('Promoting child to parent');
                         onPromoteTask(child.id, childLevel, childParentId, childGrandparentId);
                     } else if (direction === 'left' && canDemote) {
-                        // 左スワイプで降格（子→孫）
-                        console.log('Demoting child to grandchild');
                         onDemoteTask(child.id, childLevel, childParentId, childGrandparentId);
-                    } else {
-                        console.log(`Swipe action not allowed: canPromote=${canPromote}, canDemote=${canDemote}`);
                     }
                 }}
                 renderRightActions={canPromote ? () => renderRightAction(child.id, childLevel, childParentId, childGrandparentId) : null}
                 renderLeftActions={canDemote ? () => renderLeftAction(child.id, childLevel) : null}
                 enabled={!isDeleteMode && editingId !== child.id}
-                rightThreshold={50}
-                leftThreshold={50}
+                rightThreshold={20}
+                leftThreshold={20}
             >
                 <View style={[
                     level === 0 ? styles.childTaskContainer : styles.grandchildTaskContainer,
@@ -105,8 +91,8 @@ const TaskItem = ({
                 ]}>
                     <View style={[
                         level === 0 ? styles.childTaskItem : styles.grandchildTaskItem,
-                        isDeleteMode && styles.childTaskItemDeleteMode,
-                        isChildActive && styles.childTaskItemActive
+                        isDeleteMode && (level === 0 ? styles.childTaskItemDeleteMode : styles.grandchildTaskItemDeleteMode),
+                        isChildActive && (level === 0 ? styles.childTaskItemActive : styles.grandchildTaskItemActive)
                     ]}>
                         {/* 削除ボタン */}
                         {isDeleteMode && (
@@ -185,7 +171,7 @@ const TaskItem = ({
                             )}
                         </View>
 
-                        {/* 子タスク追加ボタン（子レベルでのみ孫追加、親タスクと同じデザイン） */}
+                        {/* 子タスク追加ボタン（子レベルでのみ孫追加） */}
                         {!isDeleteMode && editingId !== child.id && level === 0 && child.children !== undefined && (
                             <View style={styles.editActions}>
                                 <TouchableOpacity
@@ -193,7 +179,7 @@ const TaskItem = ({
                                     onPress={() => onAddChildTask(child.id, 2, item.id)}
                                     activeOpacity={0.7}
                                 >
-                                    <Entypo style={styles.selectButtonText} name="add-to-list" />
+                                    <Text style={styles.selectButtonText}>+</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -219,21 +205,17 @@ const TaskItem = ({
                                 keyExtractor={(grandchild) => grandchild.id}
                                 renderItem={({ item: grandchild, drag: grandchildDrag, isActive: isGrandchildActive, getIndex: getGrandchildIndex }) => {
                                     const grandchildIndex = getGrandchildIndex ? getGrandchildIndex() : 0;
-                                    console.log(`Grandchild ${grandchild.text}: level=2, index=${grandchildIndex}, canPromote=true`);
 
                                     return (
                                         <Swipeable
                                             onSwipeableOpen={(direction) => {
-                                                console.log(`Swipe ${direction} on grandchild ${grandchild.text}, level=2, index=${grandchildIndex}`);
                                                 if (direction === 'right') {
-                                                    // 孫タスクを子に昇格
-                                                    console.log('Promoting grandchild to child');
                                                     onPromoteTask(grandchild.id, 2, child.id, item.id);
                                                 }
                                             }}
                                             renderRightActions={() => renderRightAction(grandchild.id, 2, child.id, item.id)}
                                             enabled={!isDeleteMode && editingId !== grandchild.id}
-                                            rightThreshold={50}
+                                            rightThreshold={20}
                                         >
                                             <View style={[
                                                 styles.grandchildTaskContainer,
@@ -281,16 +263,10 @@ const TaskItem = ({
                                                     </TouchableOpacity>
 
                                                     {/* テキスト入力/表示エリア */}
-                                                    <View style={[
-                                                        styles.taskTextContainer,
-                                                        styles.taskTextContainerGrandchild
-                                                    ]}>
+                                                    <View style={styles.taskTextContainerGrandchild}>
                                                         {editingId === grandchild.id ? (
                                                             <TextInput
-                                                                style={[
-                                                                    styles.editInput,
-                                                                    styles.editInputGrandchild
-                                                                ]}
+                                                                style={styles.editInputGrandchild}
                                                                 value={editingText}
                                                                 onChangeText={setEditingText}
                                                                 onSubmitEditing={onSaveEdit}
@@ -301,7 +277,6 @@ const TaskItem = ({
                                                         ) : (
                                                             <TouchableOpacity
                                                                 style={[
-                                                                    styles.taskTextTouchable,
                                                                     styles.taskTextTouchableGrandchild,
                                                                     isDeleteMode && styles.taskTextTouchableDisabled
                                                                 ]}
@@ -310,7 +285,6 @@ const TaskItem = ({
                                                                 disabled={isDeleteMode}
                                                             >
                                                                 <Text style={[
-                                                                    styles.taskText,
                                                                     styles.taskTextGrandchild,
                                                                     grandchild.completed && styles.taskTextCompleted,
                                                                     isDeleteMode && styles.taskTextDisabled
@@ -351,16 +325,13 @@ const TaskItem = ({
     return (
         <Swipeable
             onSwipeableOpen={(direction) => {
-                console.log(`Swipe ${direction} on parent ${item.text}, level=${level}, canDemote=${canDemote}`);
                 if (direction === 'left' && level === 0 && canDemote) {
-                    // 親タスクを子に降格
-                    console.log('Demoting parent to child');
                     onDemoteTask(item.id, level, parentId, grandparentId);
                 }
             }}
             renderLeftActions={level === 0 && canDemote ? () => renderLeftAction(item.id, level) : null}
             enabled={!isDeleteMode && editingId !== item.id}
-            leftThreshold={50}
+            leftThreshold={20}
         >
             <View style={[
                 styles.taskContainer,
@@ -444,7 +415,7 @@ const TaskItem = ({
                                 onPress={() => onAddChildTask(item.id, level + 1, parentId)}
                                 activeOpacity={0.7}
                             >
-                                <Entypo style={styles.selectButtonText} name="add-to-list" />
+                                <Text style={styles.selectButtonText}>+</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -468,151 +439,7 @@ const TaskItem = ({
                             data={item.children}
                             onDragEnd={({ data }) => onChildDragEnd(item.id, data, level + 1, parentId)}
                             keyExtractor={(child) => child.id}
-                            renderItem={({ item: child, drag: childDrag, isActive: isChildActive, getIndex: getChildIndex }) => {
-                                const childLevel = level + 1;
-                                const childParentId = level === 0 ? item.id : parentId;
-                                const childGrandparentId = level === 0 ? null : (level === 1 ? item.id : grandparentId);
-                                const childIndex = getChildIndex ? getChildIndex() : 0;
-
-                                // スワイプ可能条件
-                                const canPromote = childLevel > 0; // 子・孫は昇格可能
-                                const canDemote = childLevel === 1 && childIndex > 0; // 子の場合、先頭以外は降格可能
-
-                                console.log(`CHILD RENDER: ${child.text} - level=${childLevel}, index=${childIndex}, canPromote=${canPromote}, canDemote=${canDemote}`);
-
-                                return (
-                                    <Swipeable
-                                        onSwipeableOpen={(direction) => {
-                                            console.log(`SWIPE ${direction} on child ${child.text}, level=${childLevel}, index=${childIndex}`);
-                                            if (direction === 'right' && canPromote) {
-                                                // 右スワイプで昇格
-                                                console.log('PROMOTING CHILD to parent');
-                                                onPromoteTask(child.id, childLevel, childParentId, childGrandparentId);
-                                            } else if (direction === 'left' && canDemote) {
-                                                // 左スワイプで降格（子→孫）
-                                                console.log('DEMOTING CHILD to grandchild');
-                                                onDemoteTask(child.id, childLevel, childParentId, childGrandparentId);
-                                            } else {
-                                                console.log(`SWIPE BLOCKED: direction=${direction}, canPromote=${canPromote}, canDemote=${canDemote}`);
-                                            }
-                                        }}
-                                        renderRightActions={canPromote ? () => renderRightAction(child.id, childLevel, childParentId, childGrandparentId) : null}
-                                        renderLeftActions={canDemote ? () => renderLeftAction(child.id, childLevel) : null}
-                                        enabled={!isDeleteMode && editingId !== child.id}
-                                        rightThreshold={50}
-                                        leftThreshold={50}
-                                    >
-                                        <View style={[
-                                            styles.childTaskContainer,
-                                            isChildActive && styles.childTaskContainerActive
-                                        ]}>
-                                            <View style={[
-                                                styles.childTaskItem,
-                                                isDeleteMode && styles.childTaskItemDeleteMode,
-                                                isChildActive && styles.childTaskItemActive
-                                            ]}>
-                                                {/* 削除ボタン */}
-                                                {isDeleteMode && (
-                                                    <TouchableOpacity
-                                                        style={styles.deleteModeButtonChild}
-                                                        onPress={() => onDeleteTask(child.id, childLevel, childParentId, childGrandparentId)}
-                                                        activeOpacity={0.7}
-                                                    >
-                                                        <Text style={styles.deleteModeButtonTextChild}>✕</Text>
-                                                    </TouchableOpacity>
-                                                )}
-
-                                                {/* チェックボックス */}
-                                                <TouchableOpacity
-                                                    style={[
-                                                        styles.checkboxContainerChild,
-                                                        isDeleteMode && styles.checkboxContainerDisabled
-                                                    ]}
-                                                    onPress={() => onToggleTask(child.id, childLevel, childParentId, childGrandparentId)}
-                                                    activeOpacity={isDeleteMode ? 1 : 0.7}
-                                                    disabled={isDeleteMode}
-                                                >
-                                                    <View style={[
-                                                        styles.checkbox,
-                                                        styles.checkboxChild,
-                                                        child.completed && styles.checkboxCompleted,
-                                                        isDeleteMode && styles.checkboxDisabled
-                                                    ]}>
-                                                        <Text style={[
-                                                            styles.checkboxText,
-                                                            styles.checkboxTextChild
-                                                        ]}>
-                                                            {child.completed ? '✓' : ''}
-                                                        </Text>
-                                                    </View>
-                                                </TouchableOpacity>
-
-                                                {/* テキスト入力/表示エリア */}
-                                                <View style={[
-                                                    styles.taskTextContainer,
-                                                    styles.taskTextContainerChild
-                                                ]}>
-                                                    {editingId === child.id ? (
-                                                        <TextInput
-                                                            style={[styles.editInput, styles.editInputChild]}
-                                                            value={editingText}
-                                                            onChangeText={setEditingText}
-                                                            onSubmitEditing={onSaveEdit}
-                                                            onBlur={onCancelEditing}
-                                                            autoFocus
-                                                            placeholder="子タスク名を入力..."
-                                                        />
-                                                    ) : (
-                                                        <TouchableOpacity
-                                                            style={[
-                                                                styles.taskTextTouchable,
-                                                                styles.taskTextTouchableChild,
-                                                                isDeleteMode && styles.taskTextTouchableDisabled
-                                                            ]}
-                                                            onPress={() => onStartEditing(child.id, child.text, childLevel, childParentId, childGrandparentId)}
-                                                            activeOpacity={isDeleteMode ? 1 : 0.7}
-                                                            disabled={isDeleteMode}
-                                                        >
-                                                            <Text style={[
-                                                                styles.taskText,
-                                                                styles.taskTextChild,
-                                                                child.completed && styles.taskTextCompleted,
-                                                                isDeleteMode && styles.taskTextDisabled
-                                                            ]}>
-                                                                {child.text || '未入力の子タスク'}
-                                                            </Text>
-                                                        </TouchableOpacity>
-                                                    )}
-                                                </View>
-
-                                                {/* 子タスク追加ボタン（子レベルでのみ孫追加、親タスクと同じデザイン） */}
-                                                {!isDeleteMode && editingId !== child.id && level === 0 && child.children !== undefined && (
-                                                    <View style={styles.editActions}>
-                                                        <TouchableOpacity
-                                                            style={styles.selectButton}
-                                                            onPress={() => onAddChildTask(child.id, 2, item.id)}
-                                                            activeOpacity={0.7}
-                                                        >
-                                                            <Entypo style={styles.selectButtonText} name="add-to-list" />
-                                                        </TouchableOpacity>
-                                                    </View>
-                                                )}
-
-                                                {/* ドラッグハンドル */}
-                                                {!isDeleteMode && (
-                                                    <TouchableOpacity
-                                                        style={styles.childDragHandle}
-                                                        onLongPress={childDrag}
-                                                        delayLongPress={100}
-                                                    >
-                                                        <Entypo style={styles.childDragHandleText} name="dots-three-vertical" />
-                                                    </TouchableOpacity>
-                                                )}
-                                            </View>
-                                        </View>
-                                    </Swipeable>
-                                );
-                            }}
+                            renderItem={renderChildTask}
                             activationDistance={10}
                             dragItemOverflow={false}
                             scrollEnabled={false}

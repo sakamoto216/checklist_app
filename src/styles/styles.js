@@ -493,7 +493,6 @@ export const styles = StyleSheet.create({
         width: 50,
         marginTop: 3,
         paddingHorizontal: 10,
-        backgroundColor: '#4CAF50',
     },
     promoteActionText: {
         color: '#fff',
@@ -513,12 +512,6 @@ export const styles = StyleSheet.create({
         width: 50,
         marginBottom: 4,
         paddingHorizontal: 10,
-        backgroundColor: '#2196F3',
-    },
-    demoteActionText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: 'bold',
     },
     demoteActionIcon: {
         fontSize: 20,
