@@ -52,6 +52,8 @@ export const useTasks = () => {
             children: [],
         };
 
+        // console.log('Adding new task:', newTask.id);
+
         setTasks(currentTasks => {
             const newTasks = [...currentTasks, newTask];
             if (onTaskAdded) {
@@ -61,6 +63,7 @@ export const useTasks = () => {
         });
 
         // 編集モードを開始
+        // console.log('Setting editing mode for new task:', newTask.id);
         setEditingId(newTask.id);
         setEditingText('');
         setEditingLevel(0);
@@ -83,12 +86,22 @@ export const useTasks = () => {
         }
     };
 
-    // 編集キャンセル
+    // 編集キャンセル（フローティング対応版）
     const cancelEditing = () => {
+        // console.log('cancelEditing called for:', editingId, 'text:', editingText);
+        
+        // 空のタスクの場合のみ削除（新規追加時のキャンセル）
         if (editingId && editingText.trim() === '') {
-            deleteTask(editingId, editingLevel, editingParentId, editingGrandparentId);
+            // タスクが実際に存在し、かつ元々空だった場合のみ削除
+            const taskExists = findTaskByPath(editingId, editingParentId, editingGrandparentId);
+            // console.log('Task exists check:', taskExists);
+            if (taskExists && taskExists.task.text === '') {
+                // console.log('Deleting empty task:', editingId);
+                deleteTask(editingId, editingLevel, editingParentId, editingGrandparentId);
+            }
         }
 
+        // console.log('Clearing editing state');
         setEditingId(null);
         setEditingText('');
         setEditingLevel(0);
