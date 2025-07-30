@@ -6,6 +6,7 @@ import DraggableFlatList from 'react-native-draggable-flatlist';
 import { StatusBar } from 'expo-status-bar';
 import { styles } from './src/styles/styles';
 import TaskItem from './src/components/TaskItem';
+import FloatingTaskEditor from './src/components/FloatingTaskEditor';
 import { useTasks } from './src/hooks/useTasks';
 import { useKeyboard } from './src/hooks/useKeyboard';
 import Footer from './src/components/Footer';
@@ -45,28 +46,59 @@ export default function App() {
     handleScrollToIndexFailed,
   } = useKeyboard(flatListRef, tasks);
 
-  // タスク追加ハンドラー
-  const handleAddTask = () => {
-    addTask(scrollToNewTask);
+  // 編集中タスクの詳細情報を取得する関数
+  const getEditingTaskDetails = () => {
+    if (!editingId) return null;
+
+    // 親タスクから検索
+    for (const task of tasks) {
+      if (task.id === editingId) {
+        return { task, level: 0, parentId: null, grandparentId: null };
+      }
+      
+      // 子タスクから検索
+      if (task.children) {
+        for (const child of task.children) {
+          if (child.id === editingId) {
+            return { task: child, level: 1, parentId: task.id, grandparentId: null };
+          }
+          
+          // 孫タスクから検索
+          if (child.children) {
+            for (const grandchild of child.children) {
+              if (grandchild.id === editingId) {
+                return { task: grandchild, level: 2, parentId: child.id, grandparentId: task.id };
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return null;
   };
 
-  // 編集開始ハンドラー（3階層対応）
-  const handleStartEditing = (taskId, currentText, level = 0, parentId = null, grandparentId = null) => {
-    startEditing(taskId, currentText, level, parentId, grandparentId, (id, lvl, parent, grandparent) => {
-      // 編集開始時に少し遅延してスクロール
-      setTimeout(() => {
-        scrollToEditingItem(id, lvl > 0, parent);
-      }, 100);
+  const editingTaskDetails = getEditingTaskDetails();
+
+  // タスク追加ハンドラー（フローティング表示版）
+  const handleAddTask = () => {
+    addTask(() => {
+      // フローティング表示のためスクロール処理は無効化
+      // 代わりにFloatingTaskEditorが自動表示される
     });
   };
 
-  // 子タスク追加ハンドラー（3階層対応）
+  // 編集開始ハンドラー（3階層対応・フローティング版）
+  const handleStartEditing = (taskId, currentText, level = 0, parentId = null, grandparentId = null) => {
+    startEditing(taskId, currentText, level, parentId, grandparentId, () => {
+      // フローティング表示のためスクロール処理は無効化
+    });
+  };
+
+  // 子タスク追加ハンドラー（3階層対応・フローティング版）
   const handleAddChildTask = (parentId, level = 1, grandparentId = null) => {
-    addChildTask(parentId, level, grandparentId, (id, lvl, parent, grandparent) => {
-      // 子タスク追加時にスクロール
-      setTimeout(() => {
-        scrollToEditingItem(id, lvl > 0, parent);
-      }, 150);
+    addChildTask(parentId, level, grandparentId, () => {
+      // フローティング表示のためスクロール処理は無効化
     });
   };
 
@@ -98,9 +130,11 @@ export default function App() {
         onDemoteTask={handleDemoteTask}
         onPromoteTask={handlePromoteTask}
         onChildDragEnd={handleChildDragEnd}
+        onDragEnd={handleDragEnd}
         level={0} // 親レベル
         parentId={null}
         grandparentId={null}
+        hideEditingTask={true} // フローティング中は編集中タスクを非表示
       />
     );
   };
@@ -163,6 +197,18 @@ export default function App() {
             onToggleDeleteMode={toggleDeleteMode}
           />
         </SafeAreaView>
+
+        {/* フローティングタスクエディター */}
+        <FloatingTaskEditor
+          visible={!!editingTaskDetails}
+          task={editingTaskDetails?.task}
+          editingText={editingText}
+          setEditingText={setEditingText}
+          onSaveEdit={saveEdit}
+          onCancelEditing={cancelEditing}
+          keyboardHeight={keyboardHeight}
+          level={editingTaskDetails?.level || 0}
+        />
       </GestureHandlerRootView>
     </SafeAreaProvider>
   );

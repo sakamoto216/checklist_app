@@ -5,85 +5,142 @@ export const useKeyboard = (flatListRef, tasks) => {
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const [screenHeight] = useState(Dimensions.get('window').height);
 
-    // キーボードイベントリスナー
+    // キーボードイベントリスナー（より早いタイミングでの検知を追加）
     useEffect(() => {
-        const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
+        let keyboardWillShowListener, keyboardWillHideListener;
+        let keyboardDidShowListener, keyboardDidHideListener;
+        
+        if (Platform.OS === 'ios') {
+            // iOSでは'will'イベントを使用してより早いタイミングで検知
+            keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', (e) => {
+                setKeyboardHeight(e.endCoordinates.height);
+            });
+            keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', () => {
+                setKeyboardHeight(0);
+            });
+        }
+        
+        // フォールバックとして'did'イベントも監視
+        keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
             setKeyboardHeight(e.endCoordinates.height);
         });
-        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+        keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
             setKeyboardHeight(0);
         });
 
         return () => {
-            keyboardDidShowListener.remove();
-            keyboardDidHideListener.remove();
+            keyboardWillShowListener?.remove();
+            keyboardWillHideListener?.remove();
+            keyboardDidShowListener?.remove();
+            keyboardDidHideListener?.remove();
         };
     }, []);
 
-    // 編集中のアイテムにスクロールする関数
-    const scrollToEditingItem = (taskId, isChild = false, parentId = null) => {
+    // 編集中のアイテムにスクロールする関数（改良版）
+    const scrollToEditingItem = (taskId, isChild = false, parentId = null, level = 0) => {
         if (!flatListRef.current) return;
 
-        setTimeout(() => {
-            // キーボードの高さに基づいて動的にviewPositionを調整
-            // キーボードが表示されているときはより上部にスクロール
-            let viewPosition;
+        const performScroll = () => {
+            if (!flatListRef.current) return;
+            
+            try {
+                // キーボード表示時は画面上部に、非表示時は中央に配置
+                const viewPosition = keyboardHeight > 0 
+                    ? (Platform.OS === 'android' ? 0.1 : 0.15)  // キーボード表示時は上部
+                    : (Platform.OS === 'android' ? 0.3 : 0.35); // 非表示時は中央
 
-            if (keyboardHeight > 0) {
-                // キーボード表示時: 画面の上部1/3程度に配置
-                viewPosition = Platform.OS === 'android' ? 0.25 : 0.3;
-            } else {
-                // キーボード非表示時: 画面の中央に配置
-                viewPosition = Platform.OS === 'android' ? 0.4 : 0.45;
+                if (isChild) {
+                    // 子・孫タスクの場合は親タスクを基準にスクロール
+                    const parentIndex = tasks.findIndex(task => task.id === parentId);
+                    if (parentIndex !== -1) {
+                        flatListRef.current.scrollToIndex({
+                            index: parentIndex,
+                            animated: true,
+                            viewPosition: viewPosition,
+                        });
+                    }
+                } else {
+                    // 親タスクの場合
+                    const taskIndex = tasks.findIndex(task => task.id === taskId);
+                    if (taskIndex !== -1) {
+                        flatListRef.current.scrollToIndex({
+                            index: taskIndex,
+                            animated: true,
+                            viewPosition: viewPosition,
+                        });
+                    }
+                }
+            } catch (error) {
+                // スクロール失敗時は最下部にスクロール
+                setTimeout(() => {
+                    flatListRef.current?.scrollToEnd({ animated: true });
+                }, 100);
             }
+        };
 
-            if (isChild) {
-                const parentIndex = tasks.findIndex(task => task.id === parentId);
-                if (parentIndex !== -1) {
-                    flatListRef.current?.scrollToIndex({
-                        index: parentIndex,
-                        animated: true,
-                        viewPosition: viewPosition,
-                    });
+        // 複数回の再試行でスクロールを確実に実行
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        const tryScroll = () => {
+            attempts++;
+            setTimeout(() => {
+                performScroll();
+                
+                // 失敗した場合は再試行
+                if (attempts < maxAttempts) {
+                    setTimeout(tryScroll, 200 * attempts);
                 }
-            } else {
-                const taskIndex = tasks.findIndex(task => task.id === taskId);
-                if (taskIndex !== -1) {
-                    flatListRef.current?.scrollToIndex({
-                        index: taskIndex,
-                        animated: true,
-                        viewPosition: viewPosition,
-                    });
-                }
-            }
-        }, Platform.OS === 'android' ? 500 : 400);
+            }, attempts === 1 ? 100 : 200 * attempts);
+        };
+
+        tryScroll();
     };
 
-    // 新規タスク追加時のスクロール
+    // 新規タスク追加時のスクロール（改良版）
     const scrollToNewTask = (taskIndex) => {
-        setTimeout(() => {
-            if (flatListRef.current && taskIndex >= 0) {
-                // 新規タスクは常に画面の上部1/3に表示
-                const viewPosition = Platform.OS === 'android' ? 0.25 : 0.3;
+        if (!flatListRef.current || taskIndex < 0) return;
 
-                try {
-                    flatListRef.current.scrollToIndex({
-                        index: taskIndex,
-                        animated: true,
-                        viewPosition: viewPosition,
-                    });
-                } catch (error) {
-                    // インデックスが無効な場合は最下部にスクロール
+        const performScrollToNew = () => {
+            if (!flatListRef.current) return;
+            
+            try {
+                // 新規タスクは画面上部に表示
+                const viewPosition = Platform.OS === 'android' ? 0.1 : 0.2;
+                
+                flatListRef.current.scrollToIndex({
+                    index: taskIndex,
+                    animated: true,
+                    viewPosition: viewPosition,
+                });
+            } catch (error) {
+                // インデックスが無効な場合は最下部にスクロール
+                setTimeout(() => {
                     flatListRef.current?.scrollToEnd({ animated: true });
-                }
+                }, 100);
             }
-        }, Platform.OS === 'android' ? 200 : 150);
+        };
+
+        // 新規タスク追加時も複数回再試行
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        const tryScrollToNew = () => {
+            attempts++;
+            setTimeout(() => {
+                performScrollToNew();
+                
+                if (attempts < maxAttempts) {
+                    setTimeout(tryScrollToNew, 150 * attempts);
+                }
+            }, attempts === 1 ? 100 : 150 * attempts);
+        };
+
+        tryScrollToNew();
     };
 
     // スクロールエラーハンドリング（改善版）
     const handleScrollToIndexFailed = (info) => {
-        console.log('ScrollToIndex failed:', info);
-
         // エラー時はより安全にスクロール
         setTimeout(() => {
             if (flatListRef.current) {
@@ -96,7 +153,7 @@ export const useKeyboard = (flatListRef, tasks) => {
                         flatListRef.current.scrollToIndex({
                             index: Math.min(info.index, tasks.length - 1),
                             animated: true,
-                            viewPosition: 0.3,
+                            viewPosition: 0.2,
                         });
                     }
                 } catch (retryError) {
@@ -107,29 +164,10 @@ export const useKeyboard = (flatListRef, tasks) => {
         }, 150);
     };
 
-    // 手動でキーボードを考慮したスクロール位置を計算
-    const scrollToPosition = (index, animated = true) => {
-        if (!flatListRef.current || index < 0 || index >= tasks.length) return;
-
-        // アイテムの推定高さ（親タスク + 子タスク）
-        const estimatedItemHeight = 60;
-        const offset = index * estimatedItemHeight;
-
-        // キーボードを考慮したスクロール位置
-        const availableHeight = screenHeight - keyboardHeight - 150; // 150はヘッダー+フッター
-        const targetOffset = Math.max(0, offset - (availableHeight * 0.3));
-
-        flatListRef.current.scrollToOffset({
-            offset: targetOffset,
-            animated
-        });
-    };
-
     return {
         keyboardHeight,
         scrollToEditingItem,
         scrollToNewTask,
         handleScrollToIndexFailed,
-        scrollToPosition, // 追加の手動スクロール関数
     };
 };

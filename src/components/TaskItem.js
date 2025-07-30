@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import DraggableFlatList from 'react-native-draggable-flatlist';
@@ -24,10 +24,23 @@ const TaskItem = ({
     onDemoteTask,
     onPromoteTask,
     onChildDragEnd,
+    onDragEnd, // 新しく追加
     level = 0, // 0: 親, 1: 子, 2: 孫
     parentId = null,
     grandparentId = null,
+    hideEditingTask = false, // フローティング中は編集中タスクを非表示
 }) => {
+    // ドラッグ状態を管理
+    const [isDragging, setIsDragging] = useState(false);
+    const [childDragging, setChildDragging] = useState(false);
+    const [grandchildDragging, setGrandchildDragging] = useState(false);
+
+    // ドラッグ終了時に状態をリセット
+    React.useEffect(() => {
+        if (!isActive) {
+            setIsDragging(false);
+        }
+    }, [isActive]);
     const index = getIndex ? getIndex() : 0;
     const canDemote = index > 0 && level < 2; // 孫レベルは降格不可
     const canPromote = level > 0; // 親レベルは昇格不可
@@ -81,7 +94,7 @@ const TaskItem = ({
                 }}
                 renderRightActions={canPromote ? () => renderRightAction(child.id, childLevel, childParentId, childGrandparentId) : null}
                 renderLeftActions={canDemote ? () => renderLeftAction(child.id, childLevel) : null}
-                enabled={!isDeleteMode && editingId !== child.id}
+                enabled={!isDeleteMode && editingId !== child.id && !isDragging && !childDragging && !grandchildDragging}
                 rightThreshold={20}
                 leftThreshold={20}
             >
@@ -135,7 +148,7 @@ const TaskItem = ({
                             styles.taskTextContainer,
                             level === 0 ? styles.taskTextContainerChild : styles.taskTextContainerGrandchild
                         ]}>
-                            {editingId === child.id ? (
+                            {editingId === child.id && !hideEditingTask ? (
                                 <TextInput
                                     style={[
                                         styles.editInput,
@@ -153,7 +166,8 @@ const TaskItem = ({
                                     style={[
                                         styles.taskTextTouchable,
                                         level === 0 ? styles.taskTextTouchableChild : styles.taskTextTouchableGrandchild,
-                                        isDeleteMode && styles.taskTextTouchableDisabled
+                                        isDeleteMode && styles.taskTextTouchableDisabled,
+                                        editingId === child.id && hideEditingTask && { opacity: 0.3 }, // 編集中は半透明
                                     ]}
                                     onPress={() => onStartEditing(child.id, child.text, childLevel, childParentId, childGrandparentId)}
                                     activeOpacity={isDeleteMode ? 1 : 0.7}
@@ -188,7 +202,10 @@ const TaskItem = ({
                         {!isDeleteMode && (
                             <TouchableOpacity
                                 style={level === 0 ? styles.childDragHandle : styles.grandchildDragHandle}
-                                onLongPress={childDrag}
+                                onLongPress={() => {
+                                    setChildDragging(true);
+                                    childDrag();
+                                }}
                                 delayLongPress={100}
                             >
                                 <Entypo style={level === 0 ? styles.childDragHandleText : styles.grandchildDragHandleText} name="dots-three-vertical" />
@@ -201,7 +218,10 @@ const TaskItem = ({
                         <View style={styles.grandchildrenContainer}>
                             <DraggableFlatList
                                 data={child.children}
-                                onDragEnd={({ data }) => onChildDragEnd(child.id, data, 2, item.id)}
+                                onDragEnd={({ data }) => {
+                                    setGrandchildDragging(false);
+                                    onChildDragEnd(child.id, data, 2, item.id);
+                                }}
                                 keyExtractor={(grandchild) => grandchild.id}
                                 renderItem={({ item: grandchild, drag: grandchildDrag, isActive: isGrandchildActive, getIndex: getGrandchildIndex }) => {
                                     const grandchildIndex = getGrandchildIndex ? getGrandchildIndex() : 0;
@@ -214,7 +234,7 @@ const TaskItem = ({
                                                 }
                                             }}
                                             renderRightActions={() => renderRightAction(grandchild.id, 2, child.id, item.id)}
-                                            enabled={!isDeleteMode && editingId !== grandchild.id}
+                                            enabled={!isDeleteMode && editingId !== grandchild.id && !isDragging && !childDragging && !grandchildDragging}
                                             rightThreshold={20}
                                         >
                                             <View style={[
@@ -264,7 +284,7 @@ const TaskItem = ({
 
                                                     {/* テキスト入力/表示エリア */}
                                                     <View style={styles.taskTextContainerGrandchild}>
-                                                        {editingId === grandchild.id ? (
+                                                        {editingId === grandchild.id && !hideEditingTask ? (
                                                             <TextInput
                                                                 style={styles.editInputGrandchild}
                                                                 value={editingText}
@@ -278,7 +298,8 @@ const TaskItem = ({
                                                             <TouchableOpacity
                                                                 style={[
                                                                     styles.taskTextTouchableGrandchild,
-                                                                    isDeleteMode && styles.taskTextTouchableDisabled
+                                                                    isDeleteMode && styles.taskTextTouchableDisabled,
+                                                                    editingId === grandchild.id && hideEditingTask && { opacity: 0.3 }, // 編集中は半透明
                                                                 ]}
                                                                 onPress={() => onStartEditing(grandchild.id, grandchild.text, 2, child.id, item.id)}
                                                                 activeOpacity={isDeleteMode ? 1 : 0.7}
@@ -299,7 +320,10 @@ const TaskItem = ({
                                                     {!isDeleteMode && (
                                                         <TouchableOpacity
                                                             style={styles.grandchildDragHandle}
-                                                            onLongPress={grandchildDrag}
+                                                            onLongPress={() => {
+                                                                setGrandchildDragging(true);
+                                                                grandchildDrag();
+                                                            }}
                                                             delayLongPress={100}
                                                         >
                                                             <Entypo style={styles.grandchildDragHandleText} name="dots-three-vertical" />
@@ -330,7 +354,7 @@ const TaskItem = ({
                 }
             }}
             renderLeftActions={level === 0 && canDemote ? () => renderLeftAction(item.id, level) : null}
-            enabled={!isDeleteMode && editingId !== item.id}
+            enabled={!isDeleteMode && editingId !== item.id && !isDragging && !childDragging && !grandchildDragging}
             leftThreshold={20}
         >
             <View style={[
@@ -376,7 +400,7 @@ const TaskItem = ({
 
                     {/* テキスト入力/表示エリア */}
                     <View style={styles.taskTextContainer}>
-                        {editingId === item.id ? (
+                        {editingId === item.id && !hideEditingTask ? (
                             <TextInput
                                 style={styles.editInput}
                                 value={editingText}
@@ -390,7 +414,8 @@ const TaskItem = ({
                             <TouchableOpacity
                                 style={[
                                     styles.taskTextTouchable,
-                                    isDeleteMode && styles.taskTextTouchableDisabled
+                                    isDeleteMode && styles.taskTextTouchableDisabled,
+                                    editingId === item.id && hideEditingTask && { opacity: 0.3 }, // 編集中は半透明
                                 ]}
                                 onPress={() => onStartEditing(item.id, item.text, level, parentId, grandparentId)}
                                 activeOpacity={isDeleteMode ? 1 : 0.7}
@@ -424,7 +449,10 @@ const TaskItem = ({
                     {!isDeleteMode && (
                         <TouchableOpacity
                             style={styles.dragHandle}
-                            onLongPress={drag}
+                            onLongPress={() => {
+                                setIsDragging(true);
+                                drag();
+                            }}
                             delayLongPress={100}
                         >
                             <Entypo style={styles.dragHandleText} name="dots-three-vertical" />
@@ -437,7 +465,10 @@ const TaskItem = ({
                     <View style={styles.childrenContainer}>
                         <DraggableFlatList
                             data={item.children}
-                            onDragEnd={({ data }) => onChildDragEnd(item.id, data, level + 1, parentId)}
+                            onDragEnd={({ data }) => {
+                                setChildDragging(false);
+                                onChildDragEnd(item.id, data, level + 1, parentId);
+                            }}
                             keyExtractor={(child) => child.id}
                             renderItem={renderChildTask}
                             activationDistance={10}
