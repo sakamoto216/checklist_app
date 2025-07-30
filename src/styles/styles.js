@@ -93,7 +93,7 @@ export const styles = StyleSheet.create({
         paddingBottom: 70, // フラットフッター分の余白に調整
     },
     taskContainer: {
-        marginBottom: 6,
+        marginBottom: 2,
         backgroundColor: '#DA7B39',
         borderRadius: 6,
     },
@@ -119,7 +119,7 @@ export const styles = StyleSheet.create({
         paddingLeft: 10,
         paddingRight: 40, // 子タスクと統一
         paddingVertical: 6,
-        borderLeftWidth: 6,
+        borderLeftWidth: 4,
         borderLeftColor: '#DA7B39', // オレンジアクセント
         minHeight: 50,
     },
@@ -344,10 +344,10 @@ export const styles = StyleSheet.create({
 
     // 子タスク
     childrenContainer: {
-        marginLeft: 20,
+        marginLeft: 15,
     },
     childTaskContainer: {
-        marginTop: 3,
+        marginTop: 2,
     },
     childTaskContainerActive: {
         backgroundColor: 'rgba(218, 123, 57, 0.08)', // オレンジアクセント
@@ -358,11 +358,9 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#ffffff',
-        paddingVertical: 8,
-        paddingHorizontal: 12,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
         paddingRight: 40, // 親タスクと統一
-        borderLeftWidth: 6,
-        borderLeftColor: '#DA7B39', // オレンジアクセント
         minHeight: 42,
     },
     childTaskItemDeleteMode: {
@@ -387,12 +385,12 @@ export const styles = StyleSheet.create({
     },
     childDragHandleText: {
         color: '#757575', // 親と同じグレー系に統一
-        fontSize: 12,
+        fontSize: 14,
     },
 
     // 孫タスクコンテナ
     grandchildrenContainer: {
-        marginLeft: 20, // 子タスクより少し小さく
+        marginLeft: 15, // 子タスクより少し小さく
     },
     grandchildTaskContainer: {
         marginTop: 2,
@@ -400,13 +398,11 @@ export const styles = StyleSheet.create({
     grandchildTaskItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#ffffff',
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        paddingRight: 40, // 親タスクと統一
-        borderLeftWidth: 6,
-        borderLeftColor: '#DA7B39', // オレンジアクセント
-        minHeight: 42,
+        backgroundColor: '#fff', // より薄いグレー
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        paddingRight: 40, // 親・子タスクと統一
+        minHeight: 36, // 子タスクより小さく
     },
     grandchildTaskItemDeleteMode: {
         backgroundColor: '#FFF9C4',
@@ -419,11 +415,11 @@ export const styles = StyleSheet.create({
 
     // 孫タスクのチェックボックス
     checkboxGrandchild: {
-        width: 20, // 子タスクより小さく
-        height: 20,
+        width: 24, // 子タスクより小さく
+        height: 24,
     },
     checkboxTextGrandchild: {
-        fontSize: 11, // 少し小さく
+        fontSize: 14, // 少し小さく
     },
 
     // 孫タスクのテキスト
@@ -432,7 +428,7 @@ export const styles = StyleSheet.create({
         marginLeft: 8,
     },
     taskTextGrandchild: {
-        fontSize: 14, // 親:16, 子:15, 孫:14
+        fontSize: 15, // すべて15
         color: '#666',
         lineHeight: 18,
     },
@@ -476,14 +472,14 @@ export const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
-        width: 32,
-        backgroundColor: '#E0E0E0', // 親と同じグレー系に統一
+        width: 32, // 親・子と同じ幅に統一
+        backgroundColor: '#E0E0E0',
         justifyContent: 'center',
         alignItems: 'center',
     },
     grandchildDragHandleText: {
         color: '#757575',
-        fontSize: 12, // 少し小さく
+        fontSize: 14, // 少し小さく
     },
 
     // 右スワイプアクション（親タスク化）
@@ -501,7 +497,6 @@ export const styles = StyleSheet.create({
     },
     promoteActionIcon: {
         fontSize: 20,
-        marginTop: 2,
         color: '#fff',
     },
 
@@ -510,12 +505,11 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         width: 50,
-        marginBottom: 4,
+        marginTop: 3,
         paddingHorizontal: 10,
     },
     demoteActionIcon: {
         fontSize: 20,
-        marginTop: 2,
         color: '#fff',
     },
 
