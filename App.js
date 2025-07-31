@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { View, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import DraggableFlatList from 'react-native-draggable-flatlist';
@@ -7,14 +7,29 @@ import { StatusBar } from 'expo-status-bar';
 import { styles } from './src/styles/styles';
 import TaskItem from './src/components/TaskItem';
 import FloatingTaskEditor from './src/components/FloatingTaskEditor';
+import TabBar from './src/components/TabBar';
 import { useTasks } from './src/hooks/useTasks';
+import { useTabManager } from './src/hooks/useTabManager';
 import { useKeyboard } from './src/hooks/useKeyboard';
 import Footer from './src/components/Footer';
 
 export default function App() {
   const flatListRef = useRef(null);
 
-  // カスタムフック（3階層対応）
+  // タブマネージャー
+  const {
+    tabs,
+    activeTabId,
+    isLoading,
+    changeActiveTab,
+    addTab,
+    editTab,
+    deleteTab,
+    updateActiveTabTasks,
+    getActiveTabTasks,
+  } = useTabManager();
+
+  // カスタムフック（3階層対応）- タブ対応のため初期データは空で開始
   const {
     tasks,
     editingId,
@@ -24,6 +39,7 @@ export default function App() {
     editingGrandparentId,
     isDeleteMode,
     setEditingText,
+    setTasks,
     addTask,
     startEditing,
     cancelEditing,
@@ -38,6 +54,26 @@ export default function App() {
     promoteTask,
     demoteTask,
   } = useTasks();
+
+  // アクティブタブのタスクデータをuseTasksに同期
+  useEffect(() => {
+    if (!isLoading && activeTabId) {
+      const activeTabTasks = getActiveTabTasks();
+      setTasks(activeTabTasks);
+
+      // リストが空の場合、未入力のタスクを自動作成（編集モードは開始しない）
+      if (activeTabTasks.length === 0) {
+        addTask(null, false);
+      }
+    }
+  }, [activeTabId, isLoading]);
+
+  // タスクが変更されたときにタブデータを更新
+  useEffect(() => {
+    if (!isLoading && activeTabId) {
+      updateActiveTabTasks(tasks);
+    }
+  }, [tasks]);
 
   const {
     keyboardHeight,
@@ -55,14 +91,14 @@ export default function App() {
       if (task.id === editingId) {
         return { task, level: 0, parentId: null, grandparentId: null };
       }
-      
+
       // 子タスクから検索
       if (task.children) {
         for (const child of task.children) {
           if (child.id === editingId) {
             return { task: child, level: 1, parentId: task.id, grandparentId: null };
           }
-          
+
           // 孫タスクから検索
           if (child.children) {
             for (const grandchild of child.children) {
@@ -74,7 +110,7 @@ export default function App() {
         }
       }
     }
-    
+
     return null;
   };
 
@@ -139,20 +175,50 @@ export default function App() {
     );
   };
 
+  // ローディング中の表示
+  if (isLoading) {
+    return (
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+            <ActivityIndicator size="large" color="#DA7B39" />
+          </SafeAreaView>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaView style={styles.container}>
           <StatusBar style="auto" />
 
+          {/* タブバー */}
+          <TabBar
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onTabChange={changeActiveTab}
+            onAddTab={addTab}
+            onEditTab={editTab}
+            onDeleteTab={deleteTab}
+            isDeleteMode={isDeleteMode}
+          />
+
           {/* メインコンテンツエリア（フッター分の余白を確保） */}
-          <View style={{ flex: 1, paddingBottom: 0 }}>
+          <View style={{
+            flex: 1,
+            paddingBottom: 0,
+            backgroundColor: '#777777',
+            marginHorizontal: -15, // コンテナのpaddingを相殺して画面幅いっぱいに
+            paddingTop: 12,
+          }}>
             <KeyboardAvoidingView
               style={{ flex: 1 }}
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
               keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
-              <View style={styles.taskList}>
+              <View style={[styles.taskList, { paddingHorizontal: 15 }]}>
                 <DraggableFlatList
                   ref={flatListRef}
                   data={tasks}
@@ -170,13 +236,21 @@ export default function App() {
                     }
                   ]}
                   onScrollToIndexFailed={handleScrollToIndexFailed}
-                  activationDistance={10}
+                  // ジェスチャー競合解決のための設定
+                  activationDistance={15} // ドラッグ開始距離を調整（25→15）
+                  dragHitSlop={{ top: 0, bottom: 0, left: -20, right: -20 }} // 左右の当たり判定を縮小
                   scrollEnabled={true}
                   showsVerticalScrollIndicator={false}
+                  // 縦スクロール優先のための設定
+                  bounces={true} // iOSでのバウンス効果を有効にしてスクロールを促進
+                  bouncesZoom={false}
+                  decelerationRate="normal" // スクロールの減速率を標準に
                   // パフォーマンス最適化
-                  removeClippedSubviews={Platform.OS === 'android'}
-                  maxToRenderPerBatch={10}
-                  updateCellsBatchingPeriod={50}
+                  removeClippedSubviews={false} // ドラッグ時のパフォーマンス向上のため無効化
+                  maxToRenderPerBatch={3} // レンダリングバッチサイズをさらに削減
+                  updateCellsBatchingPeriod={16} // 60FPS相当の更新頻度
+                  getItemLayout={null} // 動的レンダリングを有効化
+                  windowSize={10} // メモリ使用量を最適化
                   // キーボード表示時のスクロール調整
                   automaticallyAdjustKeyboardInsets={false} // 手動制御
                   maintainVisibleContentPosition={

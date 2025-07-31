@@ -4,7 +4,7 @@ export const styles = StyleSheet.create({
     // メインコンテナ
     container: {
         flex: 1,
-        backgroundColor: '#aaaaaa',
+        backgroundColor: '#aaaaaa', // 元のグレーに戻す
         paddingTop: 10, // StatusBar分を調整
         paddingHorizontal: 15,
         // 震え防止（translateZ削除）
@@ -607,5 +607,102 @@ export const styles = StyleSheet.create({
     footerDeleteButtonTextActive: {
         fontSize: 20,
         color: '#fff',
+    },
+
+    // タブバー関連スタイル
+    tabBarContainer: {
+        backgroundColor: '#aaaaaa', // 元のグレーに戻す
+        borderBottomWidth: 4, // 4pxのボーダーを追加
+        borderBottomColor: '#777777', // 濃い目のグレーのボーダー
+        paddingTop: 8,
+        paddingBottom: 0,
+        elevation: 0,
+        shadowOpacity: 0,
+        zIndex: 100,
+        marginHorizontal: -15, // コンテナのpaddingを相殺
+    },
+    tabBarScrollContent: {
+        paddingLeft: 15, // リストの左端に合わせる
+        paddingRight: 15,
+        alignItems: 'flex-end',
+    },
+    tab: {
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        marginRight: 4,
+        backgroundColor: '#999999', // オフのタブはグレー
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+        borderBottomWidth: 0,
+        minWidth: 100,
+        maxWidth: 150,
+        position: 'relative',
+        height: 40, // 高さを固定
+    },
+    activeTab: {
+        backgroundColor: '#777777', // アクティブタブは濃い目のグレー
+        elevation: 2, // Android用の影
+        shadowColor: '#000', // iOS用の影
+        shadowOffset: { width: 0, height: -1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    tabContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    tabText: {
+        fontSize: 14,
+        color: '#fff',
+        fontWeight: '500',
+        textAlign: 'center',
+        maxWidth: 120,
+    },
+    activeTabText: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+    tabDeleteButton: {
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        backgroundColor: '#ff4444',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8, // タブ名との隙間
+    },
+    tabDeleteButtonText: {
+        fontSize: 10,
+        color: '#fff',
+        fontWeight: 'bold',
+        lineHeight: 10,
+    },
+    tabEditInput: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '500',
+        textAlign: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        minWidth: 60,
+    },
+    addTab: {
+        paddingHorizontal: 16,
+        backgroundColor: '#999999',
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+        minWidth: 50,
+        height: 40, // 他のタブと同じ高さに固定
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 4, // 他のタブと同じマージン
+    },
+    addTabText: {
+        fontSize: 20,
+        color: '#fff',
+        fontWeight: 'bold',
     },
 });

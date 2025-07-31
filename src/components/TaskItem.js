@@ -95,8 +95,8 @@ const TaskItem = ({
                 renderRightActions={canPromote ? () => renderRightAction(child.id, childLevel, childParentId, childGrandparentId) : null}
                 renderLeftActions={canDemote ? () => renderLeftAction(child.id, childLevel) : null}
                 enabled={!isDeleteMode && editingId !== child.id && !isDragging && !childDragging && !grandchildDragging}
-                rightThreshold={20}
-                leftThreshold={20}
+                rightThreshold={40} // 20→40に変更して感度を下げる
+                leftThreshold={40} // 20→40に変更して感度を下げる
             >
                 <View style={[
                     level === 0 ? styles.childTaskContainer : styles.grandchildTaskContainer,
@@ -206,7 +206,10 @@ const TaskItem = ({
                                     setChildDragging(true);
                                     childDrag();
                                 }}
-                                delayLongPress={100}
+                                delayLongPress={30}
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                pressRetentionOffset={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                                activeOpacity={0.6}
                             >
                                 <Entypo style={level === 0 ? styles.childDragHandleText : styles.grandchildDragHandleText} name="dots-three-vertical" />
                             </TouchableOpacity>
@@ -235,7 +238,7 @@ const TaskItem = ({
                                             }}
                                             renderRightActions={() => renderRightAction(grandchild.id, 2, child.id, item.id)}
                                             enabled={!isDeleteMode && editingId !== grandchild.id && !isDragging && !childDragging && !grandchildDragging}
-                                            rightThreshold={20}
+                                            rightThreshold={40} // 20→40に変更して感度を下げる
                                         >
                                             <View style={[
                                                 styles.grandchildTaskContainer,
@@ -324,7 +327,10 @@ const TaskItem = ({
                                                                 setGrandchildDragging(true);
                                                                 grandchildDrag();
                                                             }}
-                                                            delayLongPress={100}
+                                                            delayLongPress={30}
+                                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                                            pressRetentionOffset={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                                                            activeOpacity={0.6}
                                                         >
                                                             <Entypo style={styles.grandchildDragHandleText} name="dots-three-vertical" />
                                                         </TouchableOpacity>
@@ -334,7 +340,7 @@ const TaskItem = ({
                                         </Swipeable>
                                     );
                                 }}
-                                activationDistance={10}
+                                activationDistance={15} // 25→15に変更してドラッグ判定を早める
                                 dragItemOverflow={false}
                                 scrollEnabled={false}
                                 nestedScrollEnabled={false}
@@ -355,7 +361,7 @@ const TaskItem = ({
             }}
             renderLeftActions={level === 0 && canDemote ? () => renderLeftAction(item.id, level) : null}
             enabled={!isDeleteMode && editingId !== item.id && !isDragging && !childDragging && !grandchildDragging}
-            leftThreshold={20}
+            leftThreshold={40} // 20→40に変更して感度を下げる
         >
             <View style={[
                 styles.taskContainer,
@@ -453,7 +459,10 @@ const TaskItem = ({
                                 setIsDragging(true);
                                 drag();
                             }}
-                            delayLongPress={100}
+                            delayLongPress={30}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            pressRetentionOffset={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                            activeOpacity={0.6}
                         >
                             <Entypo style={styles.dragHandleText} name="dots-three-vertical" />
                         </TouchableOpacity>
@@ -471,7 +480,7 @@ const TaskItem = ({
                             }}
                             keyExtractor={(child) => child.id}
                             renderItem={renderChildTask}
-                            activationDistance={10}
+                            activationDistance={15} // 25→15に変更してドラッグ判定を早める
                             dragItemOverflow={false}
                             scrollEnabled={false}
                             nestedScrollEnabled={false}

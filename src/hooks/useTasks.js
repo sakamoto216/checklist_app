@@ -44,7 +44,7 @@ export const useTasks = () => {
     };
 
     // 新しいタスクを追加（空の編集状態で）
-    const addTask = (onTaskAdded) => {
+    const addTask = (onTaskAdded, startEditing = true) => {
         const newTask = {
             id: Date.now().toString(),
             text: '',
@@ -62,13 +62,15 @@ export const useTasks = () => {
             return newTasks;
         });
 
-        // 編集モードを開始
-        // console.log('Setting editing mode for new task:', newTask.id);
-        setEditingId(newTask.id);
-        setEditingText('');
-        setEditingLevel(0);
-        setEditingParentId(null);
-        setEditingGrandparentId(null);
+        // 編集モードを開始（オプション）
+        if (startEditing) {
+            // console.log('Setting editing mode for new task:', newTask.id);
+            setEditingId(newTask.id);
+            setEditingText('');
+            setEditingLevel(0);
+            setEditingParentId(null);
+            setEditingGrandparentId(null);
+        }
     };
 
     // 編集開始（3階層対応）
