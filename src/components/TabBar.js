@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
 import { styles } from '../styles/styles';
+import TabNameEditor from './TabNameEditor';
 
 const TabBar = ({
   tabs,
@@ -10,6 +11,7 @@ const TabBar = ({
   onEditTab,
   onDeleteTab,
   isDeleteMode = false,
+  keyboardHeight = 0,
 }) => {
   const [editingTabId, setEditingTabId] = useState(null);
   const [editingText, setEditingText] = useState('');
@@ -70,19 +72,7 @@ const TabBar = ({
             onLongPress={() => startEditingTab(tab.id, tab.name)}
             activeOpacity={0.7}
           >
-            {editingTabId === tab.id ? (
-              <TextInput
-                style={styles.tabEditInput}
-                value={editingText}
-                onChangeText={setEditingText}
-                onSubmitEditing={saveTabName}
-                onBlur={cancelEditingTab}
-                autoFocus
-                maxLength={20}
-                selectTextOnFocus={true}
-              />
-            ) : (
-              <View style={styles.tabContent}>
+            <View style={styles.tabContent}>
                 {isDeleteMode && tabs.length > 1 && (
                   <TouchableOpacity
                     style={styles.tabDeleteButton}
@@ -99,7 +89,6 @@ const TabBar = ({
                   {tab.name}
                 </Text>
               </View>
-            )}
           </TouchableOpacity>
         ))}
         
@@ -112,6 +101,17 @@ const TabBar = ({
           <Text style={styles.addTabText}>+</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* タブ名編集モーダル */}
+      <TabNameEditor
+        visible={!!editingTabId}
+        tabName={editingTabId ? tabs.find(tab => tab.id === editingTabId)?.name : ''}
+        editingText={editingText}
+        setEditingText={setEditingText}
+        onSaveEdit={saveTabName}
+        onCancelEditing={cancelEditingTab}
+        keyboardHeight={keyboardHeight}
+      />
     </View>
   );
 };

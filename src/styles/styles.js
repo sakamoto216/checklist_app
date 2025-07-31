@@ -98,9 +98,15 @@ export const styles = StyleSheet.create({
         borderRadius: 6,
     },
     taskContainerActive: {
-        backgroundColor: 'rgba(218, 123, 57, 0.08)', // オレンジアクセント
-        borderWidth: 2,
+        backgroundColor: 'rgba(218, 123, 57, 0.15)', // より濃いオレンジアクセント
+        borderWidth: 3, // より太いボーダー
         borderColor: '#DA7B39', // オレンジアクセント
+        shadowColor: '#DA7B39',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 8, // Android用の影
+        transform: [{ scale: 1.02 }], // わずかに拡大
     },
     taskContainerDeleteMode: {
         backgroundColor: 'rgba(255, 87, 34, 0.05)',
@@ -350,9 +356,15 @@ export const styles = StyleSheet.create({
         marginTop: 2,
     },
     childTaskContainerActive: {
-        backgroundColor: 'rgba(218, 123, 57, 0.08)', // オレンジアクセント
-        borderWidth: 2,
+        backgroundColor: 'rgba(218, 123, 57, 0.15)', // より濃いオレンジアクセント
+        borderWidth: 3, // より太いボーダー
         borderColor: '#DA7B39', // オレンジアクセント
+        shadowColor: '#DA7B39',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 5,
+        elevation: 6, // Android用の影
+        transform: [{ scale: 1.01 }], // わずかに拡大
     },
     childTaskItem: {
         flexDirection: 'row',
@@ -370,6 +382,7 @@ export const styles = StyleSheet.create({
     childTaskItemActive: {
         backgroundColor: '#FDF5F1', // 薄いオレンジ背景
         borderLeftColor: '#DA7B39', // オレンジアクセント
+        borderLeftWidth: 4, // より太いボーダー
     },
 
     // 子タスクのドラッグハンドル（親と位置合わせ）
@@ -411,6 +424,7 @@ export const styles = StyleSheet.create({
     grandchildTaskItemActive: {
         backgroundColor: '#FFF3E0',
         borderLeftColor: '#FFA726',
+        borderLeftWidth: 4, // より太いボーダー
     },
 
     // 孫タスクのチェックボックス
@@ -575,13 +589,14 @@ export const styles = StyleSheet.create({
         zIndex: 1000, // 他の要素より前面に表示
     },
 
-    // フッター追加ボタン（左半分）- オレンジアクセント
+    // フッター追加ボタン（中央 - オレンジ）
     footerAddButton: {
-        flex: 1,
-        justifyContent: 'center', // 'top' から 'center' に変更
+        flex: 3, // さらに幅を広く
+        justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#DA7B39', // オレンジアクセント
-        height: 70, // 明示的に高さ指定
+        height: 70,
+        marginHorizontal: 2, // 左右に2pxのマージン
     },
     footerAddButtonText: {
         fontSize: 26,
@@ -589,24 +604,42 @@ export const styles = StyleSheet.create({
         fontWeight: '400',
     },
 
-    // フッター削除ボタン（右半分）
-    footerDeleteButton: {
+    // フッター共通ボタン（白背景）
+    footerButton: {
         flex: 1,
-        justifyContent: 'center', // 'top' から 'center' に変更
+        justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#fff',
-        height: 70, // 明示的に高さ指定
+        height: 70,
     },
-    footerDeleteButtonActive: {
+    footerButtonText: {
+        fontSize: 22,
+        color: '#DA7B39', // オレンジアイコン
+        fontWeight: '500',
+    },
+
+    // アクティブ状態（削除モード時）
+    footerButtonActive: {
         backgroundColor: '#FF5722',
     },
-    footerDeleteButtonText: {
-        fontSize: 24,
-        color: '#DA7B39',
-    },
-    footerDeleteButtonTextActive: {
-        fontSize: 20,
+    footerButtonTextActive: {
         color: '#fff',
+    },
+
+    // 無効化状態のスタイル
+    footerButtonDisabled: {
+        backgroundColor: '#E0E0E0',
+    },
+    footerButtonTextDisabled: {
+        color: '#9E9E9E',
+    },
+
+    // 両端ボタン用マージン
+    footerButtonLeft: {
+        marginLeft: 2, // 左端ボタンを内側に
+    },
+    footerButtonRight: {
+        marginRight: 2, // 右端ボタンを内側に
     },
 
     // タブバー関連スタイル
@@ -704,5 +737,204 @@ export const styles = StyleSheet.create({
         fontSize: 20,
         color: '#fff',
         fontWeight: 'bold',
+    },
+
+    // 設定モーダル関連
+    settingsModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    settingsModalContainer: {
+        width: '90%',
+        height: '80%',
+        backgroundColor: 'white',
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    settingsModalSimple: {
+        width: '80%',
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 0,
+        maxHeight: '60%',
+    },
+    settingsHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        backgroundColor: '#f8f8f8',
+    },
+    settingsTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#333',
+    },
+    settingsCloseButton: {
+        padding: 4,
+    },
+    settingsContent: {
+        flex: 1,
+        flexDirection: 'row',
+        padding: 20,
+    },
+    settingsContentSimple: {
+        padding: 20,
+        flexDirection: 'column',
+    },
+    settingsSidebar: {
+        width: 120,
+        backgroundColor: '#f8f8f8',
+        borderRightWidth: 1,
+        borderRightColor: '#E0E0E0',
+    },
+    sidebarItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+    },
+    sidebarItemActive: {
+        backgroundColor: '#FFF3E0',
+        borderRightWidth: 3,
+        borderRightColor: '#DA7B39',
+    },
+    sidebarItemText: {
+        fontSize: 12,
+        color: '#666',
+        marginLeft: 8,
+        fontWeight: '500',
+    },
+    sidebarItemTextActive: {
+        color: '#DA7B39',
+        fontWeight: '600',
+    },
+    settingsMain: {
+        flex: 1,
+        padding: 20,
+    },
+    settingsSection: {
+        marginBottom: 30,
+    },
+    settingsSectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 20,
+    },
+    settingsItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+    settingsLabel: {
+        fontSize: 16,
+        color: '#333',
+        flex: 1,
+    },
+    settingsPicker: {
+        width: 120,
+    },
+    picker: {
+        height: 40,
+        width: 120,
+    },
+    slider: {
+        width: 150,
+        height: 40,
+    },
+    settingsButton: {
+        backgroundColor: '#DA7B39',
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginVertical: 10,
+    },
+    settingsButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    settingsButtonDanger: {
+        backgroundColor: '#FF5722',
+    },
+    settingsButtonTextDanger: {
+        color: 'white',
+    },
+
+    // 設定項目のボタングループ
+    settingsButtonGroup: {
+        flexDirection: 'row',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 8,
+        padding: 2,
+    },
+    settingsOption: {
+        flex: 1,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    settingsOptionActive: {
+        backgroundColor: '#DA7B39',
+    },
+    settingsOptionText: {
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
+    },
+    settingsOptionTextActive: {
+        color: 'white',
+        fontWeight: '600',
+    },
+
+    // カウンター
+    settingsCounter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 8,
+        padding: 2,
+    },
+    counterButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 6,
+        backgroundColor: '#DA7B39',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    counterButtonText: {
+        fontSize: 18,
+        color: 'white',
+        fontWeight: '600',
+    },
+    counterValue: {
+        fontSize: 16,
+        color: '#333',
+        fontWeight: '600',
+        minWidth: 60,
+        textAlign: 'center',
+        marginHorizontal: 8,
+    },
+
+    // バージョン情報
+    versionContainer: {
+        paddingTop: 30,
+        alignItems: 'center',
+    },
+    versionText: {
+        fontSize: 12,
+        color: '#999',
+        textAlign: 'center',
     },
 });

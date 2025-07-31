@@ -8,13 +8,28 @@ import { styles } from './src/styles/styles';
 import TaskItem from './src/components/TaskItem';
 import FloatingTaskEditor from './src/components/FloatingTaskEditor';
 import TabBar from './src/components/TabBar';
+import SettingsModal from './src/components/SettingsModal';
 import { useTasks } from './src/hooks/useTasks';
 import { useTabManager } from './src/hooks/useTabManager';
 import { useKeyboard } from './src/hooks/useKeyboard';
+import { useSettings } from './src/hooks/useSettings';
 import Footer from './src/components/Footer';
 
 export default function App() {
   const flatListRef = useRef(null);
+
+  // 設定管理
+  const {
+    settings,
+    isLoading: isSettingsLoading,
+    updateSetting,
+    resetSettings,
+    exportSettings,
+    importSettings,
+  } = useSettings();
+
+  // 設定モーダルの状態
+  const [isSettingsModalVisible, setIsSettingsModalVisible] = React.useState(false);
 
   // タブマネージャー
   const {
@@ -53,6 +68,8 @@ export default function App() {
     handleChildDragEnd,
     promoteTask,
     demoteTask,
+    checkAllTasks,
+    uncheckAllTasks,
   } = useTasks();
 
   // アクティブタブのタスクデータをuseTasksに同期
@@ -148,6 +165,31 @@ export default function App() {
     demoteTask(taskId, currentLevel, parentId, grandparentId);
   };
 
+  // タスクの存在チェック（全件チェック機能用）
+  const hasTasksToCheck = () => {
+    const countTasks = (taskList) => {
+      let count = 0;
+      for (const task of taskList) {
+        // 空のタスクは除外
+        if (task.text && task.text.trim()) {
+          count++;
+        }
+        if (task.children) {
+          count += countTasks(task.children);
+        }
+      }
+      return count;
+    };
+    return countTasks(tasks) > 0;
+  };
+
+  // タスクのフィルタリング（完了タスク表示設定に基づく）
+  const filteredTasks = tasks.filter(task => {
+    if (settings.showCompletedTasks) return true;
+    // 完了タスクを非表示にする場合、本文が空でない未完了タスクのみ表示
+    return !task.completed && task.text && task.text.trim();
+  });
+
   // タスクアイテムのレンダリング（3階層対応）
   const renderTaskItem = (props) => {
     return (
@@ -171,12 +213,16 @@ export default function App() {
         parentId={null}
         grandparentId={null}
         hideEditingTask={true} // フローティング中は編集中タスクを非表示
+        dragSensitivity={settings.dragSensitivity}
+        showTaskNumbers={settings.showTaskNumbers}
+        showCompletedTasks={settings.showCompletedTasks}
+        swipeSensitivity={settings.swipeSensitivity}
       />
     );
   };
 
-  // ローディング中の表示
-  if (isLoading) {
+  // ローディング中の表示（設定とタブの両方）
+  if (isLoading || isSettingsLoading) {
     return (
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
@@ -203,6 +249,7 @@ export default function App() {
             onEditTab={editTab}
             onDeleteTab={deleteTab}
             isDeleteMode={isDeleteMode}
+            keyboardHeight={keyboardHeight}
           />
 
           {/* メインコンテンツエリア（フッター分の余白を確保） */}
@@ -221,7 +268,7 @@ export default function App() {
               <View style={[styles.taskList, { paddingHorizontal: 15 }]}>
                 <DraggableFlatList
                   ref={flatListRef}
-                  data={tasks}
+                  data={filteredTasks}
                   onDragEnd={handleDragEnd}
                   onDragBegin={handleDragBegin}
                   keyExtractor={(item) => item.id}
@@ -237,8 +284,8 @@ export default function App() {
                   ]}
                   onScrollToIndexFailed={handleScrollToIndexFailed}
                   // ジェスチャー競合解決のための設定
-                  activationDistance={15} // ドラッグ開始距離を調整（25→15）
-                  dragHitSlop={{ top: 0, bottom: 0, left: -20, right: -20 }} // 左右の当たり判定を縮小
+                  activationDistance={10} // ドラッグ開始距離を短縮（15→10）
+                  dragHitSlop={{ top: 5, bottom: 5, left: -10, right: -10 }} // より広い当たり判定
                   scrollEnabled={true}
                   showsVerticalScrollIndicator={false}
                   // 縦スクロール優先のための設定
@@ -247,10 +294,16 @@ export default function App() {
                   decelerationRate="normal" // スクロールの減速率を標準に
                   // パフォーマンス最適化
                   removeClippedSubviews={false} // ドラッグ時のパフォーマンス向上のため無効化
-                  maxToRenderPerBatch={3} // レンダリングバッチサイズをさらに削減
-                  updateCellsBatchingPeriod={16} // 60FPS相当の更新頻度
+                  maxToRenderPerBatch={5} // バッチサイズを適度に増やして安定性向上
+                  updateCellsBatchingPeriod={50} // 更新頻度を下げて安定性向上
                   getItemLayout={null} // 動的レンダリングを有効化
-                  windowSize={10} // メモリ使用量を最適化
+                  windowSize={15} // メモリ使用量とパフォーマンスのバランス
+                  // ドラッグ&ドロップの追加最適化
+                  dragItemOverflow={true} // ドラッグ中のアイテムがコンテナ外に出ることを許可
+                  animationConfig={{
+                    easing: 'ease-out', // よりスムーズなアニメーション
+                    duration: 200,
+                  }}
                   // キーボード表示時のスクロール調整
                   automaticallyAdjustKeyboardInsets={false} // 手動制御
                   maintainVisibleContentPosition={
@@ -269,6 +322,11 @@ export default function App() {
             isDeleteMode={isDeleteMode}
             onAddTask={handleAddTask}
             onToggleDeleteMode={toggleDeleteMode}
+            onCheckAllTasks={settings.enableBulkActions ? checkAllTasks : null}
+            onUncheckAllTasks={settings.enableBulkActions ? uncheckAllTasks : null}
+            onOpenSettings={() => setIsSettingsModalVisible(true)}
+            hasTasksToCheck={hasTasksToCheck()}
+            enableBulkActions={settings.enableBulkActions}
           />
         </SafeAreaView>
 
@@ -282,6 +340,15 @@ export default function App() {
           onCancelEditing={cancelEditing}
           keyboardHeight={keyboardHeight}
           level={editingTaskDetails?.level || 0}
+        />
+
+        {/* 設定モーダル */}
+        <SettingsModal
+          visible={isSettingsModalVisible}
+          onClose={() => setIsSettingsModalVisible(false)}
+          settings={settings}
+          updateSetting={updateSetting}
+          resetSettings={resetSettings}
         />
       </GestureHandlerRootView>
     </SafeAreaProvider>

@@ -2,17 +2,16 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, Dimensions, Platform } from 'react-native';
 import { styles } from '../styles/styles';
 
-const FloatingTaskEditor = ({
+const TabNameEditor = ({
     visible,
-    task,
+    tabName,
     editingText,
     setEditingText,
     onSaveEdit,
     onCancelEditing,
-    keyboardHeight,
-    level = 0, // 0: 親, 1: 子, 2: 孫
+    keyboardHeight = 0,
 }) => {
-    if (!visible || !task) return null;
+    if (!visible) return null;
 
     // 画面サイズを取得
     const screenHeight = Dimensions.get('window').height;
@@ -32,36 +31,6 @@ const FloatingTaskEditor = ({
     const modalBottom = keyboardHeight > 0 
         ? keyboardHeight + 20 // 実際のキーボードの20px上
         : getEstimatedKeyboardHeight() + 20; // 推定キーボードの20px上
-
-    // 新規追加か編集かを判定（タスクのテキストが空または未入力の場合は新規追加）
-    const isNewTask = !task.text || task.text.trim() === '';
-
-    // レベルに応じたプレースホルダー
-    const getPlaceholder = () => {
-        if (isNewTask) {
-            return 'アイテム名を入力...';
-        }
-        // 編集時は従来通り
-        if (level === 2) return '孫タスク名を入力...';
-        if (level === 1) return '子タスク名を入力...';
-        return 'タスク名を入力...';
-    };
-
-    // レベルに応じたタイトル
-    const getTitle = () => {
-        if (level === 2) return '孫アイテム';
-        if (level === 1) return '子アイテム';
-        return 'アイテム';
-    };
-
-    // モーダルタイトルを取得
-    const getModalTitle = () => {
-        if (isNewTask) {
-            return 'アイテムを新規追加';
-        } else {
-            return 'アイテム名を編集';
-        }
-    };
 
     return (
         <Modal
@@ -106,7 +75,7 @@ const FloatingTaskEditor = ({
                             fontWeight: '600',
                             color: '#333',
                         }}>
-                            {getModalTitle()}
+                            タブ名を編集
                         </Text>
                         <TouchableOpacity
                             onPress={onCancelEditing}
@@ -128,25 +97,25 @@ const FloatingTaskEditor = ({
                         </TouchableOpacity>
                     </View>
 
-                    {/* アイテム情報表示 */}
+                    {/* タブ情報表示 */}
                     <View style={{
                         flexDirection: 'row',
                         alignItems: 'center',
                         marginBottom: 16,
                     }}>
-                        {/* レベル表示 */}
+                        {/* タブ種別表示 */}
                         <View style={{
                             paddingHorizontal: 8,
                             paddingVertical: 4,
                             borderRadius: 8,
-                            backgroundColor: level === 2 ? '#FFF3E0' : level === 1 ? '#FDF5F1' : '#FDF5F1',
+                            backgroundColor: '#FDF5F1',
                         }}>
                             <Text style={{
                                 fontSize: 12,
-                                color: level === 2 ? '#DA7B39' : level === 1 ? '#B85A1C' : '#DA7B39',
+                                color: '#DA7B39',
                                 fontWeight: '500',
                             }}>
-                                {getTitle()}
+                                タブ
                             </Text>
                         </View>
                     </View>
@@ -168,10 +137,11 @@ const FloatingTaskEditor = ({
                         onChangeText={setEditingText}
                         onSubmitEditing={onSaveEdit}
                         autoFocus
-                        placeholder={getPlaceholder()}
+                        placeholder="タブ名を入力..."
                         placeholderTextColor="#999"
                         multiline={false}
                         selectTextOnFocus={true}
+                        maxLength={20}
                     />
 
                     {/* アクションボタン */}
@@ -239,4 +209,4 @@ const FloatingTaskEditor = ({
     );
 };
 
-export default FloatingTaskEditor;
+export default TabNameEditor;

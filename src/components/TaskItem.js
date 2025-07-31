@@ -29,6 +29,10 @@ const TaskItem = ({
     parentId = null,
     grandparentId = null,
     hideEditingTask = false, // フローティング中は編集中タスクを非表示
+    dragSensitivity = 100,
+    showTaskNumbers = false,
+    showCompletedTasks = true,
+    swipeSensitivity = 40,
 }) => {
     // ドラッグ状態を管理
     const [isDragging, setIsDragging] = useState(false);
@@ -95,8 +99,8 @@ const TaskItem = ({
                 renderRightActions={canPromote ? () => renderRightAction(child.id, childLevel, childParentId, childGrandparentId) : null}
                 renderLeftActions={canDemote ? () => renderLeftAction(child.id, childLevel) : null}
                 enabled={!isDeleteMode && editingId !== child.id && !isDragging && !childDragging && !grandchildDragging}
-                rightThreshold={40} // 20→40に変更して感度を下げる
-                leftThreshold={40} // 20→40に変更して感度を下げる
+                rightThreshold={swipeSensitivity}
+                leftThreshold={swipeSensitivity}
             >
                 <View style={[
                     level === 0 ? styles.childTaskContainer : styles.grandchildTaskContainer,
@@ -206,10 +210,10 @@ const TaskItem = ({
                                     setChildDragging(true);
                                     childDrag();
                                 }}
-                                delayLongPress={30}
-                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                pressRetentionOffset={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                                activeOpacity={0.6}
+                                delayLongPress={dragSensitivity}
+                                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                                pressRetentionOffset={{ top: 30, bottom: 30, left: 30, right: 30 }}
+                                activeOpacity={0.5}
                             >
                                 <Entypo style={level === 0 ? styles.childDragHandleText : styles.grandchildDragHandleText} name="dots-three-vertical" />
                             </TouchableOpacity>
@@ -238,7 +242,7 @@ const TaskItem = ({
                                             }}
                                             renderRightActions={() => renderRightAction(grandchild.id, 2, child.id, item.id)}
                                             enabled={!isDeleteMode && editingId !== grandchild.id && !isDragging && !childDragging && !grandchildDragging}
-                                            rightThreshold={40} // 20→40に変更して感度を下げる
+                                            rightThreshold={swipeSensitivity}
                                         >
                                             <View style={[
                                                 styles.grandchildTaskContainer,
@@ -327,10 +331,10 @@ const TaskItem = ({
                                                                 setGrandchildDragging(true);
                                                                 grandchildDrag();
                                                             }}
-                                                            delayLongPress={30}
-                                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                                            pressRetentionOffset={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                                                            activeOpacity={0.6}
+                                                            delayLongPress={dragSensitivity}
+                                                            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                                                            pressRetentionOffset={{ top: 30, bottom: 30, left: 30, right: 30 }}
+                                                            activeOpacity={0.5}
                                                         >
                                                             <Entypo style={styles.grandchildDragHandleText} name="dots-three-vertical" />
                                                         </TouchableOpacity>
@@ -459,10 +463,10 @@ const TaskItem = ({
                                 setIsDragging(true);
                                 drag();
                             }}
-                            delayLongPress={30}
-                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                            pressRetentionOffset={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                            activeOpacity={0.6}
+                            delayLongPress={dragSensitivity}
+                            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                            pressRetentionOffset={{ top: 30, bottom: 30, left: 30, right: 30 }}
+                            activeOpacity={0.5}
                         >
                             <Entypo style={styles.dragHandleText} name="dots-three-vertical" />
                         </TouchableOpacity>
