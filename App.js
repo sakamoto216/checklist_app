@@ -180,7 +180,11 @@ export default function App() {
       }
       return count;
     };
-    return countTasks(tasks) > 0;
+    const result = countTasks(tasks) > 0;
+    console.log('📱 App: hasTasksToCheck =', result);
+    console.log('📱 App: tasks.length =', tasks.length);
+    console.log('📱 App: tasks =', tasks.map(t => ({ id: t.id, text: t.text })));
+    return result;
   };
 
   // タスクのフィルタリング（完了タスク表示設定に基づく）
@@ -284,8 +288,13 @@ export default function App() {
                   ]}
                   onScrollToIndexFailed={handleScrollToIndexFailed}
                   // ジェスチャー競合解決のための設定
-                  activationDistance={10} // ドラッグ開始距離を短縮（15→10）
-                  dragHitSlop={{ top: 5, bottom: 5, left: -10, right: -10 }} // より広い当たり判定
+                  activationDistance={Platform.OS === 'android' ? 5 : 10} // Android用により短縮
+                  dragHitSlop={{ 
+                    top: Platform.OS === 'android' ? 10 : 5, 
+                    bottom: Platform.OS === 'android' ? 10 : 5, 
+                    left: Platform.OS === 'android' ? -20 : -15, 
+                    right: Platform.OS === 'android' ? -20 : -15 
+                  }} // Android用により広い判定
                   scrollEnabled={true}
                   showsVerticalScrollIndicator={false}
                   // 縦スクロール優先のための設定
@@ -293,17 +302,21 @@ export default function App() {
                   bouncesZoom={false}
                   decelerationRate="normal" // スクロールの減速率を標準に
                   // パフォーマンス最適化
-                  removeClippedSubviews={false} // ドラッグ時のパフォーマンス向上のため無効化
-                  maxToRenderPerBatch={5} // バッチサイズを適度に増やして安定性向上
-                  updateCellsBatchingPeriod={50} // 更新頻度を下げて安定性向上
+                  removeClippedSubviews={Platform.OS === 'android' ? false : true} // Android用に無効化
+                  maxToRenderPerBatch={Platform.OS === 'android' ? 3 : 5} // Android用により少なく
+                  updateCellsBatchingPeriod={Platform.OS === 'android' ? 30 : 50} // Android用により頻繁に
                   getItemLayout={null} // 動的レンダリングを有効化
-                  windowSize={15} // メモリ使用量とパフォーマンスのバランス
+                  windowSize={Platform.OS === 'android' ? 10 : 15} // Android用により少なく
+                  initialNumToRender={Platform.OS === 'android' ? 8 : 10} // Android用初期レンダリング数
                   // ドラッグ&ドロップの追加最適化
                   dragItemOverflow={true} // ドラッグ中のアイテムがコンテナ外に出ることを許可
                   animationConfig={{
-                    easing: 'ease-out', // よりスムーズなアニメーション
-                    duration: 200,
+                    easing: Platform.OS === 'android' ? 'ease' : 'ease-out', // Android用により軽量
+                    duration: Platform.OS === 'android' ? 150 : 200, // Android用により高速
                   }}
+                  // Android向けの追加設定
+                  disableIntervalMomentum={Platform.OS === 'android'} // Androidでスクロール干渉を防ぐ
+                  keyboardShouldPersistTaps="handled" // キーボード表示時のタッチ改善
                   // キーボード表示時のスクロール調整
                   automaticallyAdjustKeyboardInsets={false} // 手動制御
                   maintainVisibleContentPosition={
@@ -324,7 +337,10 @@ export default function App() {
             onToggleDeleteMode={toggleDeleteMode}
             onCheckAllTasks={settings.enableBulkActions ? checkAllTasks : null}
             onUncheckAllTasks={settings.enableBulkActions ? uncheckAllTasks : null}
-            onOpenSettings={() => setIsSettingsModalVisible(true)}
+            onOpenSettings={() => {
+              console.log('📱 App: Opening settings modal');
+              setIsSettingsModalVisible(true);
+            }}
             hasTasksToCheck={hasTasksToCheck()}
             enableBulkActions={settings.enableBulkActions}
           />
