@@ -1,10 +1,19 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
+
+// プラットフォーム別フォントサイズ調整ヘルパー
+export const getFontSize = (baseSize) => {
+    if (Platform.OS === 'android') {
+        // Androidでは30%大きくする
+        return Math.round(baseSize * 1.3);
+    }
+    return baseSize;
+};
 
 export const styles = StyleSheet.create({
     // メインコンテナ
     container: {
         flex: 1,
-        backgroundColor: '#aaaaaa',
+        backgroundColor: '#aaaaaa', // 元のグレーに戻す
         paddingTop: 10, // StatusBar分を調整
         paddingHorizontal: 15,
         // 震え防止（translateZ削除）
@@ -21,15 +30,15 @@ export const styles = StyleSheet.create({
         flex: 1,
         borderWidth: 1,
         borderColor: '#ddd',
-        padding: 14,
+        padding: 16, // 14 → 16に増加
         backgroundColor: '#fff',
         marginRight: 10,
-        fontSize: 18,
+        fontSize: getFontSize(18),
     },
     addButton: {
         backgroundColor: '#555555', // 濃いグレー
         paddingHorizontal: 20,
-        paddingVertical: 12,
+        paddingVertical: 14, // 12 → 14に増加
         justifyContent: 'center',
     },
     addButtonDisabled: {
@@ -38,7 +47,7 @@ export const styles = StyleSheet.create({
     addButtonText: {
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: getFontSize(16),
     },
 
     // 使用方法の説明
@@ -47,7 +56,7 @@ export const styles = StyleSheet.create({
         marginBottom: 10,
     },
     instructionText: {
-        fontSize: 11,
+        fontSize: getFontSize(11),
         color: '#555555',
         fontWeight: '500',
     },
@@ -61,7 +70,7 @@ export const styles = StyleSheet.create({
         borderLeftColor: '#FF5722',
     },
     deleteModeText: {
-        fontSize: 12,
+        fontSize: getFontSize(12),
         color: '#D84315',
         fontWeight: '600',
         textAlign: 'center',
@@ -79,7 +88,7 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
     },
     selectedModeText: {
-        fontSize: 12,
+        fontSize: getFontSize(12),
         color: '#B85A1C', // 濃いめのオレンジ
         fontWeight: '600',
         flex: 1,
@@ -98,9 +107,15 @@ export const styles = StyleSheet.create({
         borderRadius: 6,
     },
     taskContainerActive: {
-        backgroundColor: 'rgba(218, 123, 57, 0.08)', // オレンジアクセント
-        borderWidth: 2,
+        backgroundColor: 'rgba(218, 123, 57, 0.15)', // より濃いオレンジアクセント
+        borderWidth: 3, // より太いボーダー
         borderColor: '#DA7B39', // オレンジアクセント
+        shadowColor: '#DA7B39',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 8, // Android用の影
+        transform: [{ scale: 1.02 }], // わずかに拡大
     },
     taskContainerDeleteMode: {
         backgroundColor: 'rgba(255, 87, 34, 0.05)',
@@ -116,12 +131,12 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',
-        paddingLeft: 10,
+        paddingHorizontal: 10,
         paddingRight: 40, // 子タスクと統一
-        paddingVertical: 6,
+        paddingVertical: 10, // 6 → 10に増加
         borderLeftWidth: 4,
         borderLeftColor: '#DA7B39', // オレンジアクセント
-        minHeight: 50,
+        minHeight: 42, // 子タスクと統一
     },
     parentTaskItemSelected: {
         backgroundColor: '#FDF5F1', // 薄いオレンジ背景
@@ -144,7 +159,7 @@ export const styles = StyleSheet.create({
     },
     deleteModeButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: getFontSize(16),
         fontWeight: 'bold',
     },
     deleteModeButtonChild: {
@@ -157,7 +172,7 @@ export const styles = StyleSheet.create({
     },
     deleteModeButtonTextChild: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: getFontSize(12),
         fontWeight: 'bold',
     },
 
@@ -193,10 +208,10 @@ export const styles = StyleSheet.create({
     checkboxText: {
         color: '#fff',
         fontWeight: 'bold',
-        fontSize: 14,
+        fontSize: getFontSize(14),
     },
     checkboxTextChild: {
-        fontSize: 14,
+        fontSize: getFontSize(14),
     },
 
     // テキストエリア
@@ -211,20 +226,22 @@ export const styles = StyleSheet.create({
     },
     taskTextTouchable: {
         flex: 1,
-        paddingVertical: 2,
+        paddingVertical: 6, // 統一
     },
     taskTextTouchableChild: {
-        paddingVertical: 1,
+        paddingVertical: 6, // 統一
     },
     taskTextTouchableDisabled: {
         opacity: 0.6,
     },
     taskText: {
-        fontSize: 14,
+        fontSize: getFontSize(14),
         color: '#333',
+        lineHeight: 18, // 統一
     },
     taskTextChild: {
-        fontSize: 14,
+        fontSize: getFontSize(14),
+        lineHeight: 18, // 統一
     },
     taskTextCompleted: {
         textDecorationLine: 'line-through',
@@ -240,10 +257,10 @@ export const styles = StyleSheet.create({
         borderColor: '#DA7B39', // オレンジアクセント
         padding: 5,
         backgroundColor: '#fff',
-        fontSize: 14,
+        fontSize: getFontSize(14),
     },
     editInputChild: {
-        fontSize: 12,
+        fontSize: getFontSize(12),
         padding: 4,
     },
 
@@ -265,7 +282,7 @@ export const styles = StyleSheet.create({
     },
     saveButtonText: {
         color: '#fff',
-        fontSize: 11,
+        fontSize: getFontSize(11),
         fontWeight: 'bold',
     },
     cancelButton: {
@@ -275,7 +292,7 @@ export const styles = StyleSheet.create({
     },
     cancelButtonText: {
         color: '#fff',
-        fontSize: 11,
+        fontSize: getFontSize(11),
         fontWeight: 'bold',
     },
     selectButton: {
@@ -290,11 +307,11 @@ export const styles = StyleSheet.create({
     },
     selectButtonText: {
         color: '#DA7B39',
-        fontSize: 16,
+        fontSize: getFontSize(16),
         fontWeight: 'bold',
     },
     selectButtonTextSelected: {
-        fontSize: 14,
+        fontSize: getFontSize(14),
         color: '#DA7B39',
     },
     editButton: {
@@ -305,7 +322,7 @@ export const styles = StyleSheet.create({
     },
     editButtonText: {
         color: '#fff',
-        fontSize: 10,
+        fontSize: getFontSize(10),
         fontWeight: 'bold',
     },
     deleteButton: {
@@ -319,11 +336,11 @@ export const styles = StyleSheet.create({
     },
     deleteButtonText: {
         color: '#fff',
-        fontSize: 10,
+        fontSize: getFontSize(10),
         fontWeight: 'bold',
     },
     deleteButtonTextChild: {
-        fontSize: 9,
+        fontSize: getFontSize(9),
     },
 
     // ドラッグハンドル（親タスク）
@@ -332,14 +349,14 @@ export const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
-        width: 32,
+        width: 40, // 32 → 40に拡大
         backgroundColor: '#E0E0E0',
         justifyContent: 'center',
         alignItems: 'center',
     },
     dragHandleText: {
         color: '#757575',
-        fontSize: 14,
+        fontSize: getFontSize(14),
     },
 
     // 子タスク
@@ -350,15 +367,21 @@ export const styles = StyleSheet.create({
         marginTop: 2,
     },
     childTaskContainerActive: {
-        backgroundColor: 'rgba(218, 123, 57, 0.08)', // オレンジアクセント
-        borderWidth: 2,
+        backgroundColor: 'rgba(218, 123, 57, 0.15)', // より濃いオレンジアクセント
+        borderWidth: 3, // より太いボーダー
         borderColor: '#DA7B39', // オレンジアクセント
+        shadowColor: '#DA7B39',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 5,
+        elevation: 6, // Android用の影
+        transform: [{ scale: 1.01 }], // わずかに拡大
     },
     childTaskItem: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#ffffff',
-        paddingVertical: 6,
+        paddingVertical: 10, // 6 → 10に増加
         paddingHorizontal: 10,
         paddingRight: 40, // 親タスクと統一
         minHeight: 42,
@@ -370,6 +393,7 @@ export const styles = StyleSheet.create({
     childTaskItemActive: {
         backgroundColor: '#FDF5F1', // 薄いオレンジ背景
         borderLeftColor: '#DA7B39', // オレンジアクセント
+        borderLeftWidth: 4, // より太いボーダー
     },
 
     // 子タスクのドラッグハンドル（親と位置合わせ）
@@ -378,14 +402,14 @@ export const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
-        width: 32,
+        width: 40, // 32 → 40に拡大
         backgroundColor: '#E0E0E0', // 親と同じグレー系に統一
         justifyContent: 'center',
         alignItems: 'center',
     },
     childDragHandleText: {
         color: '#757575', // 親と同じグレー系に統一
-        fontSize: 14,
+        fontSize: getFontSize(14),
     },
 
     // 孫タスクコンテナ
@@ -399,10 +423,10 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff', // より薄いグレー
-        paddingVertical: 6,
+        paddingVertical: 10, // 6 → 10に増加
         paddingHorizontal: 10,
         paddingRight: 40, // 親・子タスクと統一
-        minHeight: 36, // 子タスクより小さく
+        minHeight: 42, // 子タスクと同じサイズに
     },
     grandchildTaskItemDeleteMode: {
         backgroundColor: '#FFF9C4',
@@ -411,6 +435,7 @@ export const styles = StyleSheet.create({
     grandchildTaskItemActive: {
         backgroundColor: '#FFF3E0',
         borderLeftColor: '#FFA726',
+        borderLeftWidth: 4, // より太いボーダー
     },
 
     // 孫タスクのチェックボックス
@@ -419,28 +444,30 @@ export const styles = StyleSheet.create({
         height: 24,
     },
     checkboxTextGrandchild: {
-        fontSize: 14, // 少し小さく
+        fontSize: getFontSize(14), // 少し小さく
     },
 
     // 孫タスクのテキスト
     taskTextContainerGrandchild: {
         flex: 1,
         marginLeft: 8,
+        paddingHorizontal: 8, // 子タスクと統一
+        paddingVertical: 8, // 子タスクと統一
     },
     taskTextGrandchild: {
-        fontSize: 15, // すべて15
+        fontSize: getFontSize(14), // 子タスクと同じサイズに
         color: '#666',
         lineHeight: 18,
     },
     taskTextTouchableGrandchild: {
-        paddingVertical: 4,
+        paddingVertical: 6, // 統一
         paddingHorizontal: 6,
         borderRadius: 4,
     },
 
     // 孫タスクの編集入力
     editInputGrandchild: {
-        fontSize: 14,
+        fontSize: getFontSize(14),
         color: '#333',
         borderWidth: 1,
         borderColor: '#FFA726',
@@ -462,7 +489,7 @@ export const styles = StyleSheet.create({
     },
     deleteModeButtonTextGrandchild: {
         color: '#fff',
-        fontSize: 10,
+        fontSize: getFontSize(10),
         fontWeight: 'bold',
     },
 
@@ -472,14 +499,14 @@ export const styles = StyleSheet.create({
         right: 0,
         top: 0,
         bottom: 0,
-        width: 32, // 親・子と同じ幅に統一
+        width: 40, // 32 → 40に拡大
         backgroundColor: '#E0E0E0',
         justifyContent: 'center',
         alignItems: 'center',
     },
     grandchildDragHandleText: {
         color: '#757575',
-        fontSize: 14, // 少し小さく
+        fontSize: getFontSize(14), // 少し小さく
     },
 
     // 右スワイプアクション（親タスク化）
@@ -492,11 +519,11 @@ export const styles = StyleSheet.create({
     },
     promoteActionText: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: getFontSize(12),
         fontWeight: 'bold',
     },
     promoteActionIcon: {
-        fontSize: 20,
+        fontSize: getFontSize(20),
         color: '#fff',
     },
 
@@ -509,7 +536,7 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 10,
     },
     demoteActionIcon: {
-        fontSize: 20,
+        fontSize: getFontSize(20),
         color: '#fff',
     },
 
@@ -536,7 +563,7 @@ export const styles = StyleSheet.create({
     },
     clearSelectionText: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: getFontSize(12),
         fontWeight: 'bold',
     },
 
@@ -575,37 +602,352 @@ export const styles = StyleSheet.create({
         zIndex: 1000, // 他の要素より前面に表示
     },
 
-    // フッター追加ボタン（左半分）- オレンジアクセント
+    // フッター追加ボタン（中央 - オレンジ）
     footerAddButton: {
-        flex: 1,
-        justifyContent: 'center', // 'top' から 'center' に変更
+        flex: 3, // さらに幅を広く
+        justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#DA7B39', // オレンジアクセント
-        height: 70, // 明示的に高さ指定
+        height: 70,
+        marginHorizontal: 2, // 左右に2pxのマージン
     },
     footerAddButtonText: {
-        fontSize: 26,
+        fontSize: getFontSize(26),
         color: '#fff',
         fontWeight: '400',
     },
 
-    // フッター削除ボタン（右半分）
-    footerDeleteButton: {
+    // フッター共通ボタン（白背景）
+    footerButton: {
         flex: 1,
-        justifyContent: 'center', // 'top' から 'center' に変更
+        justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#fff',
-        height: 70, // 明示的に高さ指定
+        height: 70,
     },
-    footerDeleteButtonActive: {
+    footerButtonText: {
+        fontSize: getFontSize(22),
+        color: '#DA7B39', // オレンジアイコン
+        fontWeight: '500',
+    },
+
+    // アクティブ状態（削除モード時）
+    footerButtonActive: {
         backgroundColor: '#FF5722',
     },
-    footerDeleteButtonText: {
-        fontSize: 24,
-        color: '#DA7B39',
-    },
-    footerDeleteButtonTextActive: {
-        fontSize: 20,
+    footerButtonTextActive: {
         color: '#fff',
+    },
+
+    // 無効化状態のスタイル
+    footerButtonDisabled: {
+        backgroundColor: '#E0E0E0',
+    },
+    footerButtonTextDisabled: {
+        color: '#9E9E9E',
+    },
+
+    // 両端ボタン用マージン
+    footerButtonLeft: {
+        marginLeft: 2, // 左端ボタンを内側に
+    },
+    footerButtonRight: {
+        marginRight: 2, // 右端ボタンを内側に
+    },
+
+    // タブバー関連スタイル
+    tabBarContainer: {
+        backgroundColor: '#aaaaaa', // 元のグレーに戻す
+        borderBottomWidth: 4, // 4pxのボーダーを追加
+        borderBottomColor: '#777777', // 濃い目のグレーのボーダー
+        paddingTop: 8,
+        paddingBottom: 0,
+        elevation: 0,
+        shadowOpacity: 0,
+        zIndex: 100,
+        marginHorizontal: -15, // コンテナのpaddingを相殺
+    },
+    tabBarScrollContent: {
+        paddingLeft: 15, // リストの左端に合わせる
+        paddingRight: 15,
+        alignItems: 'flex-end',
+    },
+    tab: {
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        marginRight: 4,
+        backgroundColor: '#999999', // オフのタブはグレー
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+        borderBottomWidth: 0,
+        minWidth: 100,
+        maxWidth: 150,
+        position: 'relative',
+        height: 40, // 高さを固定
+    },
+    activeTab: {
+        backgroundColor: '#777777', // アクティブタブは濃い目のグレー
+        elevation: 2, // Android用の影
+        shadowColor: '#000', // iOS用の影
+        shadowOffset: { width: 0, height: -1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    tabContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    tabText: {
+        fontSize: getFontSize(14),
+        color: '#fff',
+        fontWeight: '500',
+        textAlign: 'center',
+        maxWidth: 120,
+    },
+    activeTabText: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+    tabDeleteButton: {
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        backgroundColor: '#ff4444',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8, // タブ名との隙間
+    },
+    tabDeleteButtonText: {
+        fontSize: getFontSize(10),
+        color: '#fff',
+        fontWeight: 'bold',
+        lineHeight: 10,
+    },
+    tabEditInput: {
+        fontSize: getFontSize(14),
+        color: '#333',
+        fontWeight: '500',
+        textAlign: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        minWidth: 60,
+    },
+    addTab: {
+        paddingHorizontal: 16,
+        backgroundColor: '#999999',
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+        minWidth: 50,
+        height: 40, // 他のタブと同じ高さに固定
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 4, // 他のタブと同じマージン
+    },
+    addTabText: {
+        fontSize: getFontSize(20),
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+
+    // 設定モーダル関連
+    settingsModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    settingsModalContainer: {
+        width: '90%',
+        height: '80%',
+        backgroundColor: 'white',
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    settingsModalSimple: {
+        width: '80%',
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 0,
+        maxHeight: '60%',
+    },
+    settingsHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+        backgroundColor: '#f8f8f8',
+    },
+    settingsTitle: {
+        fontSize: getFontSize(20),
+        fontWeight: '600',
+        color: '#333',
+    },
+    settingsCloseButton: {
+        padding: 4,
+    },
+    settingsContent: {
+        flex: 1,
+        flexDirection: 'row',
+        padding: 20,
+    },
+    settingsContentSimple: {
+        padding: 20,
+        flexDirection: 'column',
+    },
+    settingsSidebar: {
+        width: 120,
+        backgroundColor: '#f8f8f8',
+        borderRightWidth: 1,
+        borderRightColor: '#E0E0E0',
+    },
+    sidebarItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
+    },
+    sidebarItemActive: {
+        backgroundColor: '#FFF3E0',
+        borderRightWidth: 3,
+        borderRightColor: '#DA7B39',
+    },
+    sidebarItemText: {
+        fontSize: getFontSize(12),
+        color: '#666',
+        marginLeft: 8,
+        fontWeight: '500',
+    },
+    sidebarItemTextActive: {
+        color: '#DA7B39',
+        fontWeight: '600',
+    },
+    settingsMain: {
+        flex: 1,
+        padding: 20,
+    },
+    settingsSection: {
+        marginBottom: 30,
+    },
+    settingsSectionTitle: {
+        fontSize: getFontSize(18),
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 20,
+    },
+    settingsItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+    settingsLabel: {
+        fontSize: getFontSize(16),
+        color: '#333',
+        flex: 1,
+    },
+    settingsPicker: {
+        width: 120,
+    },
+    picker: {
+        height: 40,
+        width: 120,
+    },
+    slider: {
+        width: 150,
+        height: 40,
+    },
+    settingsButton: {
+        backgroundColor: '#DA7B39',
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginVertical: 10,
+    },
+    settingsButtonText: {
+        color: 'white',
+        fontSize: getFontSize(16),
+        fontWeight: '600',
+    },
+    settingsButtonDanger: {
+        backgroundColor: '#FF5722',
+    },
+    settingsButtonTextDanger: {
+        color: 'white',
+    },
+
+    // 設定項目のボタングループ
+    settingsButtonGroup: {
+        flexDirection: 'row',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 8,
+        padding: 2,
+    },
+    settingsOption: {
+        flex: 1,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    settingsOptionActive: {
+        backgroundColor: '#DA7B39',
+    },
+    settingsOptionText: {
+        fontSize: getFontSize(14),
+        color: '#666',
+        fontWeight: '500',
+    },
+    settingsOptionTextActive: {
+        color: 'white',
+        fontWeight: '600',
+    },
+
+    // カウンター
+    settingsCounter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 8,
+        padding: 2,
+    },
+    counterButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 6,
+        backgroundColor: '#DA7B39',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    counterButtonText: {
+        fontSize: getFontSize(18),
+        color: 'white',
+        fontWeight: '600',
+    },
+    counterValue: {
+        fontSize: getFontSize(16),
+        color: '#333',
+        fontWeight: '600',
+        minWidth: 60,
+        textAlign: 'center',
+        marginHorizontal: 8,
+    },
+
+    // バージョン情報
+    versionContainer: {
+        paddingTop: 30,
+        alignItems: 'center',
+    },
+    versionText: {
+        fontSize: getFontSize(12),
+        color: '#999',
+        textAlign: 'center',
     },
 });

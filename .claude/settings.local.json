@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/ticket.sh:*)",
+      "Bash(mv:*)"
+    ],
+    "deny": []
+  }
+}

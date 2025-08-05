@@ -44,7 +44,7 @@ export const useTasks = () => {
     };
 
     // 新しいタスクを追加（空の編集状態で）
-    const addTask = (onTaskAdded) => {
+    const addTask = (onTaskAdded, startEditing = true) => {
         const newTask = {
             id: Date.now().toString(),
             text: '',
@@ -62,13 +62,15 @@ export const useTasks = () => {
             return newTasks;
         });
 
-        // 編集モードを開始
-        // console.log('Setting editing mode for new task:', newTask.id);
-        setEditingId(newTask.id);
-        setEditingText('');
-        setEditingLevel(0);
-        setEditingParentId(null);
-        setEditingGrandparentId(null);
+        // 編集モードを開始（オプション）
+        if (startEditing) {
+            // console.log('Setting editing mode for new task:', newTask.id);
+            setEditingId(newTask.id);
+            setEditingText('');
+            setEditingLevel(0);
+            setEditingParentId(null);
+            setEditingGrandparentId(null);
+        }
     };
 
     // 編集開始（3階層対応）
@@ -519,6 +521,66 @@ export const useTasks = () => {
         });
     };
 
+    // 全件チェック機能
+    const checkAllTasks = () => {
+        if (isDeleteMode) return;
+
+        setTasks(currentTasks => {
+            return currentTasks.map(task => {
+                const updatedTask = { ...task, completed: true };
+                
+                // 子タスクも全てチェック
+                if (task.children) {
+                    updatedTask.children = task.children.map(child => {
+                        const updatedChild = { ...child, completed: true };
+                        
+                        // 孫タスクも全てチェック
+                        if (child.children) {
+                            updatedChild.children = child.children.map(grandchild => ({
+                                ...grandchild,
+                                completed: true
+                            }));
+                        }
+                        
+                        return updatedChild;
+                    });
+                }
+                
+                return updatedTask;
+            });
+        });
+    };
+
+    // 全件チェック解除機能
+    const uncheckAllTasks = () => {
+        if (isDeleteMode) return;
+
+        setTasks(currentTasks => {
+            return currentTasks.map(task => {
+                const updatedTask = { ...task, completed: false };
+                
+                // 子タスクも全てチェック解除
+                if (task.children) {
+                    updatedTask.children = task.children.map(child => {
+                        const updatedChild = { ...child, completed: false };
+                        
+                        // 孫タスクも全てチェック解除
+                        if (child.children) {
+                            updatedChild.children = child.children.map(grandchild => ({
+                                ...grandchild,
+                                completed: false
+                            }));
+                        }
+                        
+                        return updatedChild;
+                    });
+                }
+                
+                return updatedTask;
+            });
+        });
+    };
+
     return {
         // State
         tasks,
@@ -548,5 +610,7 @@ export const useTasks = () => {
         promoteTask,
         demoteTask,
         findTaskByPath,
+        checkAllTasks,
+        uncheckAllTasks,
     };
 };
