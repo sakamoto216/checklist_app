@@ -21,6 +21,7 @@ const SettingsModal = ({
     settings,
     updateSetting,
     resetSettings,
+    onClearAllTasks,
 }) => {
     // リセット確認
     const handleReset = () => {
@@ -34,6 +35,30 @@ const SettingsModal = ({
                 [
                     { text: 'キャンセル', style: 'cancel' },
                     { text: 'リセット', style: 'destructive', onPress: resetSettings }
+                ],
+                { cancelable: true }
+            );
+        };
+        
+        if (Platform.OS === 'android') {
+            setTimeout(showAlert, 100);
+        } else {
+            showAlert();
+        }
+    };
+
+    // リスト初期化確認
+    const handleClearAllTasks = () => {
+        console.log('📱 SettingsModal: handleClearAllTasks called');
+        
+        // Android対応: 少し遅延してからAlertを表示
+        const showAlert = () => {
+            Alert.alert(
+                'リストを初期化',
+                'すべてのタスクが削除されます。この操作は取り消せません。',
+                [
+                    { text: 'キャンセル', style: 'cancel' },
+                    { text: '初期化', style: 'destructive', onPress: onClearAllTasks }
                 ],
                 { cancelable: true }
             );
@@ -132,6 +157,24 @@ const SettingsModal = ({
                             </Text>
                         </Pressable>
 
+                        {/* リスト初期化ボタン */}
+                        <Pressable 
+                            style={({ pressed }) => [
+                                styles.settingsButton, 
+                                styles.settingsButtonCritical, 
+                                { marginTop: 15 },
+                                pressed && { opacity: 0.8 }
+                            ]} 
+                            onPress={() => {
+                                console.log('📱 SettingsModal: Clear all tasks button pressed');
+                                handleClearAllTasks();
+                            }}
+                        >
+                            <Text style={[styles.settingsButtonText, styles.settingsButtonTextCritical]}>
+                                リストの初期化
+                            </Text>
+                        </Pressable>
+
                         {/* バージョン情報 */}
                         <View style={styles.versionContainer}>
                             <Text style={styles.versionText}>
@@ -212,6 +255,24 @@ const SettingsModal = ({
                         >
                             <Text style={[styles.settingsButtonText, styles.settingsButtonTextDanger]}>
                                 設定をリセット
+                            </Text>
+                        </Pressable>
+
+                        {/* リスト初期化ボタン */}
+                        <Pressable 
+                            style={({ pressed }) => [
+                                styles.settingsButton, 
+                                styles.settingsButtonCritical, 
+                                { marginTop: 15 },
+                                pressed && { opacity: 0.8 }
+                            ]} 
+                            onPress={() => {
+                                console.log('📱 SettingsModal: Clear all tasks button pressed');
+                                handleClearAllTasks();
+                            }}
+                        >
+                            <Text style={[styles.settingsButtonText, styles.settingsButtonTextCritical]}>
+                                リストの初期化
                             </Text>
                         </Pressable>
 

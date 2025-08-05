@@ -70,6 +70,7 @@ export default function App() {
     demoteTask,
     checkAllTasks,
     uncheckAllTasks,
+    clearAllTasks,
   } = useTasks();
 
   // アクティブタブのタスクデータをuseTasksに同期
@@ -163,6 +164,13 @@ export default function App() {
   // 降格ハンドラー（3階層対応）
   const handleDemoteTask = (taskId, currentLevel, parentId = null, grandparentId = null) => {
     demoteTask(taskId, currentLevel, parentId, grandparentId);
+  };
+
+  // リスト初期化ハンドラー
+  const handleClearAllTasks = () => {
+    console.log('📱 App: handleClearAllTasks called');
+    clearAllTasks();
+    console.log('📱 App: All tasks cleared');
   };
 
   // タスクの存在チェック（全件チェック機能用）
@@ -365,6 +373,7 @@ export default function App() {
           settings={settings}
           updateSetting={updateSetting}
           resetSettings={resetSettings}
+          onClearAllTasks={handleClearAllTasks}
         />
       </GestureHandlerRootView>
     </SafeAreaProvider>

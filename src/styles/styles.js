@@ -609,7 +609,7 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#DA7B39', // オレンジアクセント
         height: 70,
-        marginHorizontal: 2, // 左右に2pxのマージン
+        // marginHorizontal削除でボーダー・マージンなし
     },
     footerAddButtonText: {
         fontSize: getFontSize(26),
@@ -880,6 +880,12 @@ export const styles = StyleSheet.create({
         backgroundColor: '#FF5722',
     },
     settingsButtonTextDanger: {
+        color: 'white',
+    },
+    settingsButtonCritical: {
+        backgroundColor: '#D32F2F', // より濃い赤色
+    },
+    settingsButtonTextCritical: {
         color: 'white',
     },
 

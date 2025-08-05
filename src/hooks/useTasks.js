@@ -581,6 +581,40 @@ export const useTasks = () => {
         });
     };
 
+    // 全タスク削除（初期化）機能
+    const clearAllTasks = () => {
+        console.log('🗑️ useTasks: clearAllTasks called');
+        
+        // 編集モードをキャンセル
+        if (editingId) {
+            cancelEditing();
+        }
+        
+        // 削除モードを無効化
+        if (isDeleteMode) {
+            setIsDeleteMode(false);
+        }
+        
+        // 全タスクを削除して空のタスクを1つ作成
+        const initialTask = {
+            id: Date.now().toString(),
+            text: '',
+            completed: false,
+            children: [],
+        };
+        
+        setTasks([initialTask]);
+        
+        // 新しいタスクの編集モードを開始
+        setEditingId(initialTask.id);
+        setEditingText('');
+        setEditingLevel(0);
+        setEditingParentId(null);
+        setEditingGrandparentId(null);
+        
+        console.log('🗑️ useTasks: All tasks cleared, new empty task created');
+    };
+
     return {
         // State
         tasks,
@@ -612,5 +646,6 @@ export const useTasks = () => {
         findTaskByPath,
         checkAllTasks,
         uncheckAllTasks,
+        clearAllTasks,
     };
 };
