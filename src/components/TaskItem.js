@@ -210,7 +210,7 @@ const TaskItem = ({
                                     setChildDragging(true);
                                     childDrag();
                                 }}
-                                delayLongPress={dragSensitivity}
+                                delayLongPress={Platform.OS === 'android' ? Math.max(dragSensitivity, 120) : dragSensitivity}
                                 hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
                                 pressRetentionOffset={{ top: 30, bottom: 30, left: 30, right: 30 }}
                                 activeOpacity={0.5}
@@ -331,7 +331,7 @@ const TaskItem = ({
                                                                 setGrandchildDragging(true);
                                                                 grandchildDrag();
                                                             }}
-                                                            delayLongPress={dragSensitivity}
+                                                            delayLongPress={Platform.OS === 'android' ? Math.max(dragSensitivity, 120) : dragSensitivity}
                                                             hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
                                                             pressRetentionOffset={{ top: 30, bottom: 30, left: 30, right: 30 }}
                                                             activeOpacity={0.5}
@@ -344,7 +344,7 @@ const TaskItem = ({
                                         </Swipeable>
                                     );
                                 }}
-                                activationDistance={15} // 25→15に変更してドラッグ判定を早める
+                                activationDistance={Platform.OS === 'android' ? 20 : 15} // Android用安定性向上
                                 dragItemOverflow={false}
                                 scrollEnabled={false}
                                 nestedScrollEnabled={false}
@@ -463,18 +463,18 @@ const TaskItem = ({
                                 setIsDragging(true);
                                 drag();
                             }}
-                            delayLongPress={Platform.OS === 'android' ? Math.max(dragSensitivity - 50, 50) : dragSensitivity}
+                            delayLongPress={Platform.OS === 'android' ? Math.max(dragSensitivity, 100) : dragSensitivity}
                             hitSlop={{ 
-                                top: Platform.OS === 'android' ? 20 : 15, 
-                                bottom: Platform.OS === 'android' ? 20 : 15, 
-                                left: Platform.OS === 'android' ? 20 : 15, 
-                                right: Platform.OS === 'android' ? 20 : 15 
+                                top: Platform.OS === 'android' ? 25 : 15, 
+                                bottom: Platform.OS === 'android' ? 25 : 15, 
+                                left: Platform.OS === 'android' ? 25 : 15, 
+                                right: Platform.OS === 'android' ? 25 : 15 
                             }}
                             pressRetentionOffset={{ 
-                                top: Platform.OS === 'android' ? 40 : 30, 
-                                bottom: Platform.OS === 'android' ? 40 : 30, 
-                                left: Platform.OS === 'android' ? 40 : 30, 
-                                right: Platform.OS === 'android' ? 40 : 30 
+                                top: Platform.OS === 'android' ? 50 : 30, 
+                                bottom: Platform.OS === 'android' ? 50 : 30, 
+                                left: Platform.OS === 'android' ? 50 : 30, 
+                                right: Platform.OS === 'android' ? 50 : 30 
                             }}
                             activeOpacity={Platform.OS === 'android' ? 0.7 : 0.5}
                         >
@@ -494,7 +494,7 @@ const TaskItem = ({
                             }}
                             keyExtractor={(child) => child.id}
                             renderItem={renderChildTask}
-                            activationDistance={15} // 25→15に変更してドラッグ判定を早める
+                            activationDistance={Platform.OS === 'android' ? 20 : 15} // Android用安定性向上
                             dragItemOverflow={false}
                             scrollEnabled={false}
                             nestedScrollEnabled={false}

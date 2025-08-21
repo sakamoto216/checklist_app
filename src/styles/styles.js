@@ -102,7 +102,7 @@ export const styles = StyleSheet.create({
         paddingBottom: 70, // フラットフッター分の余白に調整
     },
     taskContainer: {
-        marginBottom: 2,
+        marginBottom: 3, // 2→3に統一
         backgroundColor: '#DA7B39',
         borderRadius: 6,
     },
@@ -266,8 +266,13 @@ export const styles = StyleSheet.create({
 
     // ボタン群
     editActions: {
+        position: 'absolute',
+        right: Platform.OS === 'android' ? 50 : 45, // Android用にもう少し右寄せ (65→50)
+        top: Platform.OS === 'android' ? -2 : 0, // Android用に微調整 (-3→-2)
+        bottom: Platform.OS === 'android' ? 2 : 0, // Android用に微調整 (3→2)
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
     },
     buttonGroup: {
         flexDirection: 'row',
@@ -296,19 +301,19 @@ export const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     selectButton: {
-        width: 28,
-        height: 28,
+        width: Platform.OS === 'android' ? 54 : 28, // Android用にさらに1.5倍大きく (36→54)
+        height: Platform.OS === 'android' ? 54 : 28, // Android用にさらに1.5倍大きく (36→54)
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 8,
+        marginRight: 0, // 絶対配置なのでmarginは不要
     },
     selectButtonSelected: {
         backgroundColor: '#B85A1C', // 濃いオレンジ
     },
     selectButtonText: {
         color: '#DA7B39',
-        fontSize: getFontSize(16),
-        fontWeight: 'bold',
+        fontSize: Platform.OS === 'android' ? getFontSize(30) : getFontSize(16), // Android用にさらに大きく (20→30)
+        fontWeight: Platform.OS === 'android' ? '300' : 'bold', // Android用に細く
     },
     selectButtonTextSelected: {
         fontSize: getFontSize(14),
@@ -364,7 +369,7 @@ export const styles = StyleSheet.create({
         marginLeft: 15,
     },
     childTaskContainer: {
-        marginTop: 2,
+        marginTop: 3, // 2→3に統一
     },
     childTaskContainerActive: {
         backgroundColor: 'rgba(218, 123, 57, 0.15)', // より濃いオレンジアクセント
@@ -417,7 +422,7 @@ export const styles = StyleSheet.create({
         marginLeft: 15, // 子タスクより少し小さく
     },
     grandchildTaskContainer: {
-        marginTop: 2,
+        marginTop: 3, // 2→3に統一
     },
     grandchildTaskItem: {
         flexDirection: 'row',

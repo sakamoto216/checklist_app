@@ -171,6 +171,8 @@ export default function App() {
     console.log('📱 App: handleClearAllTasks called');
     clearAllTasks();
     console.log('📱 App: All tasks cleared');
+    // リスト初期化後に設定画面を閉じる
+    setIsSettingsModalVisible(false);
   };
 
   // タスクの存在チェック（全件チェック機能用）
@@ -296,13 +298,13 @@ export default function App() {
                   ]}
                   onScrollToIndexFailed={handleScrollToIndexFailed}
                   // ジェスチャー競合解決のための設定
-                  activationDistance={Platform.OS === 'android' ? 5 : 10} // Android用により短縮
+                  activationDistance={Platform.OS === 'android' ? 15 : 10} // Android用安定性向上
                   dragHitSlop={{ 
-                    top: Platform.OS === 'android' ? 10 : 5, 
-                    bottom: Platform.OS === 'android' ? 10 : 5, 
-                    left: Platform.OS === 'android' ? -20 : -15, 
-                    right: Platform.OS === 'android' ? -20 : -15 
-                  }} // Android用により広い判定
+                    top: Platform.OS === 'android' ? 15 : 5, 
+                    bottom: Platform.OS === 'android' ? 15 : 5, 
+                    left: Platform.OS === 'android' ? -15 : -15, 
+                    right: Platform.OS === 'android' ? -15 : -15 
+                  }} // Android用バランス調整
                   scrollEnabled={true}
                   showsVerticalScrollIndicator={false}
                   // 縦スクロール優先のための設定
@@ -311,16 +313,16 @@ export default function App() {
                   decelerationRate="normal" // スクロールの減速率を標準に
                   // パフォーマンス最適化
                   removeClippedSubviews={Platform.OS === 'android' ? false : true} // Android用に無効化
-                  maxToRenderPerBatch={Platform.OS === 'android' ? 3 : 5} // Android用により少なく
-                  updateCellsBatchingPeriod={Platform.OS === 'android' ? 30 : 50} // Android用により頻繁に
+                  maxToRenderPerBatch={Platform.OS === 'android' ? 5 : 5} // Android用安定性重視
+                  updateCellsBatchingPeriod={Platform.OS === 'android' ? 50 : 50} // Android用安定性重視
                   getItemLayout={null} // 動的レンダリングを有効化
-                  windowSize={Platform.OS === 'android' ? 10 : 15} // Android用により少なく
-                  initialNumToRender={Platform.OS === 'android' ? 8 : 10} // Android用初期レンダリング数
+                  windowSize={Platform.OS === 'android' ? 15 : 15} // Android用安定性重視
+                  initialNumToRender={Platform.OS === 'android' ? 10 : 10} // Android用安定性重視
                   // ドラッグ&ドロップの追加最適化
                   dragItemOverflow={true} // ドラッグ中のアイテムがコンテナ外に出ることを許可
                   animationConfig={{
-                    easing: Platform.OS === 'android' ? 'ease' : 'ease-out', // Android用により軽量
-                    duration: Platform.OS === 'android' ? 150 : 200, // Android用により高速
+                    easing: Platform.OS === 'android' ? 'ease-out' : 'ease-out', // Android用安定性重視
+                    duration: Platform.OS === 'android' ? 200 : 200, // Android用安定性重視
                   }}
                   // Android向けの追加設定
                   disableIntervalMomentum={Platform.OS === 'android'} // Androidでスクロール干渉を防ぐ
