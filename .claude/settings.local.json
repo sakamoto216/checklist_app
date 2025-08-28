@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(./scripts/ticket.sh:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(eas build:configure)",
+      "Bash(npx expo install:*)",
+      "Bash(npx expo r:*)",
+      "Bash(npx expo start:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx kill-port:*)"
     ],
     "deny": []
   }

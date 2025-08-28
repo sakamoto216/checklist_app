@@ -1,4 +1,4 @@
-# チェックリストアプリ - CLAUDE開発ガイド
+# Nest List - CLAUDE開発ガイド
 
 ## 🎫 【最重要】チケット駆動開発システム
 
@@ -73,7 +73,7 @@ npm run web      # Web
 
 ## ファイル構造
 ```
-checklist_app_new/
+nest-list/
 ├── App.js                    # メインアプリケーションコンポーネント
 ├── src/
 │   ├── components/
