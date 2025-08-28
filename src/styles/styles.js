@@ -133,10 +133,10 @@ export const styles = StyleSheet.create({
         backgroundColor: '#fff',
         paddingHorizontal: 10,
         paddingRight: 40, // 子タスクと統一
-        paddingVertical: 10, // 6 → 10に増加
+        paddingVertical: Platform.OS === 'ios' ? 4 : 10, // iOS: 4, Android: 10
         borderLeftWidth: 4,
         borderLeftColor: '#DA7B39', // オレンジアクセント
-        minHeight: 42, // 子タスクと統一
+        minHeight: Platform.OS === 'ios' ? 26 : 42, // iOS: 26, Android: 42
     },
     parentTaskItemSelected: {
         backgroundColor: '#FDF5F1', // 薄いオレンジ背景
@@ -386,10 +386,10 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#ffffff',
-        paddingVertical: 10, // 6 → 10に増加
+        paddingVertical: Platform.OS === 'ios' ? 4 : 10, // iOS: 4, Android: 10
         paddingHorizontal: 10,
         paddingRight: 40, // 親タスクと統一
-        minHeight: 42,
+        minHeight: Platform.OS === 'ios' ? 26 : 42, // iOS: 26, Android: 42
     },
     childTaskItemDeleteMode: {
         backgroundColor: '#FFF8E1',
@@ -428,10 +428,10 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff', // より薄いグレー
-        paddingVertical: 10, // 6 → 10に増加
+        paddingVertical: Platform.OS === 'ios' ? 4 : 10, // iOS: 4, Android: 10
         paddingHorizontal: 10,
         paddingRight: 40, // 親・子タスクと統一
-        minHeight: 42, // 子タスクと同じサイズに
+        minHeight: Platform.OS === 'ios' ? 26 : 42, // iOS: 26, Android: 42
     },
     grandchildTaskItemDeleteMode: {
         backgroundColor: '#FFF9C4',

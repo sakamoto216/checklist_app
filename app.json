@@ -14,6 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.kouhei-sakamoto.nestlist",
       "splash": {
         "image": "./assets/splash-icon.png",
         "resizeMode": "contain",
@@ -30,10 +31,16 @@
         "resizeMode": "contain",
         "backgroundColor": "#DA7B39"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.kouhei_sakamoto.nestlist"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "68ea52f8-cf4b-4e60-a531-31a00abae0aa"
+      }
     }
   }
 }
